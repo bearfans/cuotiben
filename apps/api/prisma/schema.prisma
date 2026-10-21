@@ -1,0 +1,357 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Semester {
+  FIRST
+  SECOND
+}
+
+enum QuestionType {
+  SINGLE_CHOICE
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+  FILL_BLANK
+  SHORT_ANSWER
+  OTHER
+}
+
+enum QuestionStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum QuestionSource {
+  AI
+  MANUAL
+}
+
+enum AiJobStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  PARTIAL
+  FAILED
+}
+
+enum AiImageStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+}
+
+enum ReviewRating {
+  AGAIN
+  HARD
+  GOOD
+  EASY
+}
+
+enum PaperStatus {
+  READY
+  GENERATING
+  FAILED
+}
+
+enum KnowledgePointStatus {
+  ACTIVE
+  MERGED
+}
+
+enum ImageKind {
+  SOURCE
+  FIGURE
+}
+
+model User {
+  id           String    @id @default(uuid()) @db.Uuid
+  username     String    @unique
+  passwordHash String
+  displayName  String
+  status       String    @default("active")
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  students       StudentProfile[]
+  refreshTokens  RefreshToken[]
+  uploadFiles    UploadFile[]
+  aiJobs         AiJob[]
+  wrongQuestions WrongQuestion[]
+  reviewLogs     ReviewLog[]
+  papers         Paper[]
+}
+
+model RefreshToken {
+  id                  String    @id @default(uuid()) @db.Uuid
+  userId              String    @db.Uuid
+  tokenHash           String    @unique
+  expiresAt           DateTime
+  revokedAt           DateTime?
+  replacedByTokenHash String?
+  userAgent           String?
+  ip                  String?
+  createdAt           DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model StudentProfile {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @db.Uuid
+  name       String
+  grade      Int
+  semester   Semester @default(FIRST)
+  avatarUrl  String?
+  isArchived Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wrongQuestions WrongQuestion[]
+  aiJobs         AiJob[]
+  papers         Paper[]
+
+  @@index([userId])
+}
+
+model Subject {
+  id        String   @id
+  name      String
+  shortName String
+  stages    String[]
+  color     String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  knowledgePoints KnowledgePoint[]
+  wrongQuestions  WrongQuestion[]
+  papers          Paper[]
+}
+
+model KnowledgePoint {
+  id             String               @id @default(uuid()) @db.Uuid
+  subjectId      String
+  name           String
+  normalizedName String
+  aliases        String[]             @default([])
+  gradeMin       Int?
+  gradeMax       Int?
+  status         KnowledgePointStatus @default(ACTIVE)
+  mergedIntoId   String?              @db.Uuid
+  usageCount     Int                  @default(0)
+  createdBy      String               @default("AI")
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  subject            Subject                       @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  wrongQuestionLinks WrongQuestionKnowledgePoint[]
+
+  @@unique([subjectId, normalizedName])
+  @@index([subjectId, usageCount])
+  @@index([name])
+}
+
+model WrongQuestion {
+  id             String         @id @default(uuid()) @db.Uuid
+  userId         String         @db.Uuid
+  studentId      String         @db.Uuid
+  subjectId      String
+  grade          Int
+  semester       Semester
+  questionType   QuestionType
+  stem           String         @db.Text
+  options        Json?
+  correctAnswer  String?        @db.Text
+  studentAnswer  String?        @db.Text
+  analysis       String?        @db.Text
+  errorReason    String?        @db.Text
+  difficulty     Int            @default(3)
+  mastery        Int            @default(0)
+  status         QuestionStatus @default(ACTIVE)
+  source         QuestionSource @default(MANUAL)
+  sourceJobId    String?        @db.Uuid
+  note           String?        @db.Text
+  reviewCount    Int            @default(0)
+  intervalDays   Int            @default(1)
+  nextReviewAt   DateTime       @default(now())
+  lastReviewedAt DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  deletedAt      DateTime?
+
+  user            User                          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  student         StudentProfile                @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  subject         Subject                       @relation(fields: [subjectId], references: [id], onDelete: Restrict)
+  knowledgePoints WrongQuestionKnowledgePoint[]
+  images          QuestionImage[]
+  reviewLogs      ReviewLog[]
+  paperItems      PaperItem[]
+
+  @@index([userId, studentId, subjectId, status])
+  @@index([studentId, nextReviewAt])
+  @@index([userId, createdAt])
+  @@index([deletedAt])
+}
+
+model WrongQuestionKnowledgePoint {
+  wrongQuestionId  String  @db.Uuid
+  knowledgePointId String  @db.Uuid
+  isPrimary        Boolean @default(false)
+  confidence       Float?
+
+  wrongQuestion  WrongQuestion  @relation(fields: [wrongQuestionId], references: [id], onDelete: Cascade)
+  knowledgePoint KnowledgePoint @relation(fields: [knowledgePointId], references: [id], onDelete: Cascade)
+
+  @@id([wrongQuestionId, knowledgePointId])
+  @@index([knowledgePointId])
+}
+
+model UploadFile {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @db.Uuid
+  storageKey   String
+  thumbnailKey String?
+  mimeType     String
+  size         Int
+  width        Int?
+  height       Int?
+  sha256       String?
+  originalName String?
+  createdAt    DateTime @default(now())
+
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  images      QuestionImage[]
+  aiJobImages AiJobImage[]
+
+  @@index([userId, createdAt])
+}
+
+model QuestionImage {
+  id              String    @id @default(uuid()) @db.Uuid
+  wrongQuestionId String    @db.Uuid
+  uploadFileId    String    @db.Uuid
+  kind            ImageKind @default(SOURCE)
+  sortOrder       Int       @default(0)
+  createdAt       DateTime  @default(now())
+
+  wrongQuestion WrongQuestion @relation(fields: [wrongQuestionId], references: [id], onDelete: Cascade)
+  uploadFile    UploadFile    @relation(fields: [uploadFileId], references: [id], onDelete: Cascade)
+
+  @@unique([wrongQuestionId, uploadFileId, kind])
+  @@index([wrongQuestionId])
+}
+
+model AiJob {
+  id            String      @id @default(uuid()) @db.Uuid
+  userId        String      @db.Uuid
+  studentId     String      @db.Uuid
+  status        AiJobStatus @default(PENDING)
+  grade         Int
+  semester      Semester
+  subjectHint   String?
+  imageCount    Int
+  model         String
+  promptVersion String      @default("v1")
+  tokensIn      Int         @default(0)
+  tokensOut     Int         @default(0)
+  error         String?     @db.Text
+  createdAt     DateTime    @default(now())
+  startedAt     DateTime?
+  finishedAt    DateTime?
+
+  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  student StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  images  AiJobImage[]
+
+  @@index([userId, createdAt])
+  @@index([status])
+}
+
+model AiJobImage {
+  id           String        @id @default(uuid()) @db.Uuid
+  jobId        String        @db.Uuid
+  uploadFileId String        @db.Uuid
+  sortOrder    Int           @default(0)
+  status       AiImageStatus @default(PENDING)
+  rawResponse  Json?
+  result       Json?
+  error        String?       @db.Text
+  confidence   Float?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  job        AiJob      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  uploadFile UploadFile @relation(fields: [uploadFileId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, uploadFileId])
+  @@index([jobId])
+}
+
+model ReviewLog {
+  id              String       @id @default(uuid()) @db.Uuid
+  userId          String       @db.Uuid
+  wrongQuestionId String       @db.Uuid
+  rating          ReviewRating
+  scheduledAt     DateTime
+  completedAt     DateTime     @default(now())
+  intervalBefore  Int
+  intervalAfter   Int
+  masteryBefore   Int
+  masteryAfter    Int
+  createdAt       DateTime     @default(now())
+
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wrongQuestion WrongQuestion @relation(fields: [wrongQuestionId], references: [id], onDelete: Cascade)
+
+  @@index([userId, completedAt])
+  @@index([wrongQuestionId, completedAt])
+}
+
+model Paper {
+  id            String      @id @default(uuid()) @db.Uuid
+  userId        String      @db.Uuid
+  studentId     String      @db.Uuid
+  subjectId     String?
+  title         String
+  grade         Int
+  questionCount Int
+  settings      Json
+  status        PaperStatus @default(READY)
+  pdfKey        String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  deletedAt     DateTime?
+
+  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  student StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  subject Subject?       @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  items   PaperItem[]
+
+  @@index([userId, createdAt])
+  @@index([studentId])
+}
+
+model PaperItem {
+  id              String   @id @default(uuid()) @db.Uuid
+  paperId         String   @db.Uuid
+  wrongQuestionId String?  @db.Uuid
+  sortOrder       Int      @default(0)
+  section         String
+  snapshot        Json
+  createdAt       DateTime @default(now())
+
+  paper         Paper          @relation(fields: [paperId], references: [id], onDelete: Cascade)
+  wrongQuestion WrongQuestion? @relation(fields: [wrongQuestionId], references: [id], onDelete: SetNull)
+
+  @@index([paperId, sortOrder])
+}

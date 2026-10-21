@@ -1,0 +1,352 @@
+:root {
+  --brand: #4f46e5;
+  --brand-dark: #4338ca;
+  --brand-soft: #eef2ff;
+  --teal: #0d9488;
+  --teal-soft: #ccfbf1;
+  --amber: #f59e0b;
+  --amber-soft: #fef3c7;
+  --rose: #e11d48;
+  --rose-soft: #ffe4e6;
+  --bg: #f4f6fb;
+  --surface: #ffffff;
+  --surface-soft: #f8fafc;
+  --text: #0f172a;
+  --text-2: #475569;
+  --muted: #94a3b8;
+  --line: #e8edf5;
+  --radius-lg: 22px;
+  --radius: 16px;
+  --radius-sm: 11px;
+  --shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+  --shadow-soft: 0 4px 16px rgba(15, 23, 42, 0.04);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+  --van-primary-color: var(--brand);
+  --van-success-color: var(--teal);
+  --van-danger-color: var(--rose);
+  --van-warning-color: var(--amber);
+  --van-text-color: var(--text);
+  --van-text-color-2: var(--text-2);
+  --van-text-color-3: var(--muted);
+  --van-background: var(--bg);
+  --van-background-2: var(--surface);
+  --van-border-color: var(--line);
+  --van-radius-md: 12px;
+  --van-cell-group-inset-padding: 0;
+  --van-field-label-color: var(--text-2);
+  --van-tabbar-item-active-color: var(--brand);
+  --van-tabbar-height: 58px;
+  --van-dialog-radius: 20px;
+  --van-popup-round-radius: 22px;
+  --van-button-primary-background: var(--brand);
+  --van-button-primary-border-color: var(--brand);
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background: #e9edf5;
+  color: var(--text);
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
+    'Noto Sans CJK SC', sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.app-shell {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  min-height: 100vh;
+  margin: 0 auto;
+  background: var(--bg);
+  box-shadow: 0 0 50px rgba(15, 23, 42, 0.08);
+}
+
+.app-main {
+  min-height: 100vh;
+  padding-bottom: calc(76px + var(--safe-bottom));
+}
+
+.app-main.no-tabbar {
+  padding-bottom: calc(24px + var(--safe-bottom));
+}
+
+.page {
+  padding: 0 16px 24px;
+}
+
+.page-tight {
+  padding: 0 12px 24px;
+}
+
+.card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+}
+
+.section {
+  margin-top: 20px;
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.section-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+
+.section-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.text-2 {
+  color: var(--text-2);
+}
+
+.brand-text {
+  color: var(--brand);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.chip-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+
+.chip-row::-webkit-scrollbar {
+  display: none;
+}
+
+.chip {
+  flex: 0 0 auto;
+  padding: 7px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+
+.chip.active {
+  border-color: var(--brand);
+  background: var(--brand);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.24);
+}
+
+.rich-text {
+  color: var(--text);
+  line-height: 1.75;
+  word-break: break-word;
+}
+
+.rich-text .katex {
+  font-size: 1.04em;
+}
+
+.rich-text .katex-display {
+  margin: 8px 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 2px 0;
+}
+
+.rich-text img {
+  max-width: 100%;
+  border-radius: 8px;
+}
+
+.rich-text strong {
+  font-weight: 700;
+}
+
+.rich-text .katex-html {
+  white-space: normal;
+}
+
+.skeleton-card {
+  height: 108px;
+  margin-bottom: 12px;
+  border-radius: var(--radius);
+  background: linear-gradient(90deg, #eef1f7 25%, #f8fafc 37%, #eef1f7 63%);
+  background-size: 400% 100%;
+  animation: skeleton 1.3s ease infinite;
+}
+
+@keyframes skeleton {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+.empty-wrap {
+  padding: 40px 16px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.empty-emoji {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 40px;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.18s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.slide-up-enter-from,
+.slide-up-leave-to {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.safe-bottom {
+  height: calc(12px + var(--safe-bottom));
+}
+
+.sticky-actions {
+  position: sticky;
+  bottom: calc(12px + var(--safe-bottom));
+  z-index: 5;
+  display: flex;
+  gap: 10px;
+  padding: 10px 0 0;
+  background: linear-gradient(to top, var(--bg) 68%, rgba(244, 246, 251, 0));
+}
+
+.van-button {
+  font-weight: 600;
+}
+
+.van-button--large {
+  height: 48px;
+}
+
+.van-cell {
+  background: transparent;
+}
+
+.van-cell::after {
+  border-color: var(--line);
+}
+
+.van-field__label {
+  font-weight: 500;
+}
+
+.van-toast {
+  font-weight: 500;
+}
+
+.van-dialog__header {
+  font-weight: 700;
+}
+
+.van-tabbar {
+  max-width: 600px;
+  margin: 0 auto;
+  border-top: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.04);
+}
+
+.van-tabbar-item {
+  font-size: 11px;
+}
+
+.van-tabbar-item__icon {
+  font-size: 22px;
+  margin-bottom: 2px;
+}
+
+.van-popup--bottom {
+  max-width: 600px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.van-overlay {
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.van-nav-bar {
+  background: transparent;
+}
+
+.van-nav-bar::after {
+  display: none;
+}

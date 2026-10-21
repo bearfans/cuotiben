@@ -1,0 +1,102 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-myos}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-myos}
+      POSTGRES_DB: ${POSTGRES_DB:-myos}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-myos} -d ${POSTGRES_DB:-myos}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-myos}:${POSTGRES_PASSWORD:-myos}@postgres:5432/${POSTGRES_DB:-myos}?schema=public
+      WEB_URL: ${WEB_URL:-http://localhost:8080}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      TRUST_PROXY: ${TRUST_PROXY:-true}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-please-change-this-access-secret}
+      JWT_ACCESS_TTL: ${JWT_ACCESS_TTL:-2h}
+      JWT_REFRESH_DAYS: ${JWT_REFRESH_DAYS:-30}
+      REGISTRATION_INVITE_CODE: ${REGISTRATION_INVITE_CODE:-}
+      STORAGE_DRIVER: local
+      STORAGE_LOCAL_DIR: /app/storage
+      FILE_SIGNING_SECRET: ${FILE_SIGNING_SECRET:-please-change-this-file-secret}
+      FILE_URL_TTL_SECONDS: ${FILE_URL_TTL_SECONDS:-86400}
+      AI_PROVIDER: ${AI_PROVIDER:-mock}
+      AI_BASE_URL: ${AI_BASE_URL:-https://api.openai.com/v1}
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_MODEL: ${AI_MODEL:-gpt-4o-mini}
+      AI_TIMEOUT_MS: ${AI_TIMEOUT_MS:-120000}
+      AI_MAX_RETRIES: ${AI_MAX_RETRIES:-1}
+      AI_JSON_MODE: ${AI_JSON_MODE:-true}
+      AI_DAILY_JOB_LIMIT: ${AI_DAILY_JOB_LIMIT:-50}
+      AI_PROMPT_VERSION: ${AI_PROMPT_VERSION:-v1}
+      AI_MAX_IMAGE_EDGE: ${AI_MAX_IMAGE_EDGE:-1600}
+      QUEUE_ENABLED: ${QUEUE_ENABLED:-false}
+      REDIS_URL: redis://redis:6379
+      AI_QUEUE_CONCURRENCY: ${AI_QUEUE_CONCURRENCY:-2}
+      PDF_ENABLED: ${PDF_ENABLED:-true}
+      PAPER_SIGNING_SECRET: ${PAPER_SIGNING_SECRET:-please-change-this-paper-secret}
+      PAPER_TOKEN_TTL_SECONDS: ${PAPER_TOKEN_TTL_SECONDS:-900}
+      SEED_DEMO: ${SEED_DEMO:-false}
+      TZ: Asia/Shanghai
+    volumes:
+      - storage:/app/storage
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/v1/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  redisdata:
+  storage:

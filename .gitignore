@@ -1,0 +1,16 @@
+node_modules
+dist
+.env
+.env.*
+!.env.example
+storage/*
+!storage/.gitkeep
+!apps/api/storage/.gitkeep
+coverage
+*.log
+.DS_Store
+apps/web/dist
+apps/api/dist
+apps/api/prisma/*.db
+playwright-report
+test-results
