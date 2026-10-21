@@ -81,27 +81,11 @@
         <RichText :text="question.note" />
       </div>
 
-      <div class="card review-info">
-        <div class="review-item">
-          <strong>{{ question.reviewCount }}</strong>
-          <span>已复习次数</span>
-        </div>
-        <div class="review-item">
-          <strong>{{ question.intervalDays }}<small>天</small></strong>
-          <span>当前间隔</span>
-        </div>
-        <div class="review-item">
-          <strong>{{ formatRelative(question.nextReviewAt) }}</strong>
-          <span>下次复习</span>
-        </div>
-      </div>
-
       <div class="detail-actions">
-        <van-button block round type="primary" icon="replay" @click="showRating = true">
-          完成一次复习
+        <van-button block round type="primary" icon="description-o" @click="addToPaper">
+          加入组卷
         </van-button>
         <div class="secondary-actions">
-          <van-button round plain icon="description-o" @click="addToPaper">加入组卷</van-button>
           <van-button round plain icon="edit" @click="router.push(`/questions/${question.id}/edit`)">
             编辑
           </van-button>
@@ -117,32 +101,6 @@
         <van-button round type="primary" @click="router.replace('/questions')">返回错题本</van-button>
       </EmptyState>
     </div>
-
-    <van-popup v-model:show="showRating" position="bottom" round>
-      <div class="rating-sheet">
-        <h3>这次复习感觉如何？</h3>
-        <p>根据掌握情况选择，系统会自动调整下次复习时间</p>
-        <div class="rating-options">
-          <button
-            v-for="rating in REVIEW_RATINGS"
-            :key="rating.value"
-            type="button"
-            class="rating-option"
-            :style="{ '--rating-color': rating.color }"
-            :disabled="ratingLoading"
-            @click="completeReview(rating.value)"
-          >
-            <span class="rating-dot" />
-            <span class="rating-main">
-              <strong>{{ rating.label }}</strong>
-              <small>{{ rating.description }}</small>
-            </span>
-            <van-icon name="arrow" color="#cbd5e1" />
-          </button>
-        </div>
-        <van-button block round plain @click="showRating = false">稍后再说</van-button>
-      </div>
-    </van-popup>
   </div>
 </template>
 
@@ -151,13 +109,11 @@ import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { showConfirmDialog, showImagePreview, showToast } from 'vant';
 import {
-  REVIEW_RATINGS,
   questionTypeLabel,
   type QuestionImage,
-  type ReviewRating,
   type WrongQuestion,
 } from '@myos/shared';
-import { questionsApi, reviewApi } from '@/api';
+import { questionsApi } from '@/api';
 import { errorMessage } from '@/api/client';
 import { usePaperSelectionStore } from '@/stores/paperSelection';
 import PageHeader from '@/components/PageHeader.vue';
@@ -165,7 +121,7 @@ import RichText from '@/components/RichText.vue';
 import SubjectPill from '@/components/SubjectPill.vue';
 import MasteryBadge from '@/components/MasteryBadge.vue';
 import EmptyState from '@/components/EmptyState.vue';
-import { formatDate, formatRelative } from '@/utils/format';
+import { formatDate } from '@/utils/format';
 
 const route = useRoute();
 const router = useRouter();
@@ -173,8 +129,6 @@ const paperSelection = usePaperSelectionStore();
 
 const question = ref<WrongQuestion | null>(null);
 const loading = ref(true);
-const showRating = ref(false);
-const ratingLoading = ref(false);
 
 async function load(): Promise<void> {
   loading.value = true;
@@ -191,21 +145,6 @@ async function load(): Promise<void> {
 
 function previewImages(images: QuestionImage[], current: string): void {
   showImagePreview({ images: images.map((image) => image.url), startPosition: Math.max(0, images.findIndex((image) => image.url === current)) });
-}
-
-async function completeReview(rating: ReviewRating): Promise<void> {
-  if (!question.value) return;
-  ratingLoading.value = true;
-  try {
-    const { data } = await reviewApi.complete(question.value.id, rating);
-    question.value = data;
-    showRating.value = false;
-    showToast({ type: 'success', message: '复习完成，已安排下次复习' });
-  } catch (error) {
-    showToast(errorMessage(error));
-  } finally {
-    ratingLoading.value = false;
-  }
 }
 
 async function addToPaper(): Promise<void> {
@@ -356,7 +295,7 @@ onMounted(load);
 }
 
 .answer-row.correct .answer-label {
-  color: var(--teal);
+  color: var(--brand-dark);
 }
 
 .answer-row.wrong .answer-label {
@@ -394,40 +333,6 @@ onMounted(load);
   font-weight: 500;
 }
 
-.review-info {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  padding: 14px 0;
-}
-
-.review-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  border-right: 1px solid var(--line);
-}
-
-.review-item:last-child {
-  border-right: 0;
-}
-
-.review-item strong {
-  color: var(--text);
-  font-size: 17px;
-  font-weight: 800;
-}
-
-.review-item strong small {
-  font-size: 10px;
-  font-weight: 500;
-}
-
-.review-item span {
-  color: var(--muted);
-  font-size: 10.5px;
-}
-
 .detail-actions {
   display: flex;
   flex-direction: column;
@@ -437,70 +342,11 @@ onMounted(load);
 
 .secondary-actions {
   display: grid;
-  grid-template-columns: 1.3fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 8px;
 }
 
 .secondary-actions :deep(.van-button) {
   font-size: 12px;
-}
-
-.rating-sheet {
-  padding: 20px 18px calc(18px + var(--safe-bottom));
-}
-
-.rating-sheet h3 {
-  margin: 0;
-  font-size: 19px;
-  text-align: center;
-}
-
-.rating-sheet > p {
-  margin: 6px 0 18px;
-  color: var(--muted);
-  font-size: 11.5px;
-  text-align: center;
-}
-
-.rating-options {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 14px;
-}
-
-.rating-option {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 14px;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: var(--surface);
-  text-align: left;
-}
-
-.rating-dot {
-  width: 9px;
-  height: 9px;
-  flex: 0 0 auto;
-  border-radius: 50%;
-  background: var(--rating-color);
-}
-
-.rating-main {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  line-height: 1.35;
-}
-
-.rating-main strong {
-  font-size: 14px;
-}
-
-.rating-main small {
-  color: var(--muted);
-  font-size: 10.5px;
 }
 </style>

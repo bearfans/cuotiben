@@ -9,24 +9,23 @@
         <StudentSwitcher />
       </div>
 
-      <div v-if="studentStore.currentStudent" class="due-card">
-        <div class="due-copy">
-          <span class="due-label">今日复习</span>
-          <strong>{{ stats?.dueToday ?? 0 }}<small> 道待复习</small></strong>
-          <p v-if="stats?.overdue" class="due-overdue">其中 {{ stats.overdue }} 道已逾期</p>
-          <p v-else class="due-overdue">保持节奏，记忆更牢固</p>
+      <div v-if="studentStore.currentStudent" class="overview-card">
+        <div class="overview-copy">
+          <span class="overview-label">本周新增</span>
+          <strong>{{ stats?.addedThisWeek ?? 0 }}<small> 道错题</small></strong>
+          <p class="overview-hint">继续整理，让薄弱点越来越清晰</p>
         </div>
-        <button type="button" class="due-action" @click="router.push('/review')">
-          <van-icon name="play-circle-o" size="26" />
-          <span>开始</span>
+        <button type="button" class="overview-action" @click="router.push('/upload')">
+          <van-icon name="photograph" size="24" />
+          <span>录题</span>
         </button>
       </div>
-      <div v-else class="due-card no-student">
-        <div class="due-copy">
+      <div v-else class="overview-card no-student">
+        <div class="overview-copy">
           <strong>先添加孩子档案</strong>
-          <p class="due-overdue">建立档案后即可拍照录题、制定复习计划</p>
+          <p class="overview-hint">建立档案后即可录题、管理错题</p>
         </div>
-        <button type="button" class="due-action" @click="router.push('/profile')">
+        <button type="button" class="overview-action" @click="router.push('/profile')">
           <van-icon name="plus" size="22" />
           <span>添加</span>
         </button>
@@ -36,14 +35,14 @@
     <div class="page home-body">
       <div v-if="studentStore.currentStudent" class="stat-grid">
         <div class="stat-card card">
-          <span class="stat-icon" style="background: #eef2ff; color: #4f46e5">
+          <span class="stat-icon" style="background: #e8f7ee; color: #16a34a">
             <van-icon name="notes-o" />
           </span>
           <strong>{{ stats?.activeQuestions ?? 0 }}</strong>
           <span>错题总数</span>
         </div>
         <div class="stat-card card">
-          <span class="stat-icon" style="background: #ccfbf1; color: #0d9488">
+          <span class="stat-icon" style="background: #dcfce7; color: #15803d">
             <van-icon name="certificate" />
           </span>
           <strong>{{ stats?.masteredQuestions ?? 0 }}</strong>
@@ -57,27 +56,6 @@
           <span>近 7 天新增</span>
         </div>
       </div>
-
-      <section class="section">
-        <div class="quick-grid">
-          <button type="button" class="quick-item" @click="router.push('/upload')">
-            <span class="quick-icon camera"><van-icon name="photograph" size="23" /></span>
-            <span>拍照录题</span>
-          </button>
-          <button type="button" class="quick-item" @click="router.push('/questions/new')">
-            <span class="quick-icon edit"><van-icon name="edit" size="22" /></span>
-            <span>手动录入</span>
-          </button>
-          <button type="button" class="quick-item" @click="router.push('/review')">
-            <span class="quick-icon review"><van-icon name="clock-o" size="23" /></span>
-            <span>开始复习</span>
-          </button>
-          <button type="button" class="quick-item" @click="router.push('/papers/new')">
-            <span class="quick-icon paper"><van-icon name="description" size="22" /></span>
-            <span>生成试卷</span>
-          </button>
-        </div>
-      </section>
 
       <template v-if="studentStore.currentStudent">
         <section class="section">
@@ -105,7 +83,7 @@
               v-else
               emoji="📚"
               title="还没有错题"
-              description="拍下第一道错题，开始建立专属错题本"
+              description="拍照识别或手动录入，开始建立专属错题本"
             >
               <van-button size="small" round type="primary" @click="router.push('/upload')">
                 去录题
@@ -117,7 +95,7 @@
         <section class="section">
           <div class="section-head">
             <h2 class="section-title">近 7 天录入</h2>
-            <span class="section-link">{{ stats?.completed7Days ?? 0 }} 次复习完成</span>
+            <span class="section-link">{{ stats?.addedLast7Days ?? 0 }} 道新增</span>
           </div>
           <div class="card panel trend-panel">
             <div class="trend-bars">
@@ -281,7 +259,7 @@ watch(() => studentStore.currentStudentId, load);
   padding: 18px 18px 44px;
   background:
     radial-gradient(circle at 90% 10%, rgba(255, 255, 255, 0.2), transparent 36%),
-    linear-gradient(145deg, #4338ca 0%, #4f46e5 42%, #6366f1 100%);
+    linear-gradient(145deg, #15803d 0%, #16a34a 42%, #22c55e 100%);
   color: #fff;
   border-radius: 0 0 28px 28px;
 }
@@ -307,7 +285,7 @@ watch(() => studentStore.currentStudentId, load);
   letter-spacing: -0.3px;
 }
 
-.due-card {
+.overview-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -320,38 +298,38 @@ watch(() => studentStore.currentStudentId, load);
   backdrop-filter: blur(10px);
 }
 
-.due-copy {
+.overview-copy {
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
 
-.due-label {
+.overview-label {
   color: rgba(255, 255, 255, 0.68);
   font-size: 11px;
   letter-spacing: 0.5px;
 }
 
-.due-copy strong {
+.overview-copy strong {
   margin-top: 2px;
   font-size: 30px;
   font-weight: 800;
   line-height: 1.1;
 }
 
-.due-copy strong small {
+.overview-copy strong small {
   font-size: 12px;
   font-weight: 500;
   opacity: 0.75;
 }
 
-.due-overdue {
+.overview-hint {
   margin: 3px 0 0;
   color: rgba(255, 255, 255, 0.66);
   font-size: 11px;
 }
 
-.due-action {
+.overview-action {
   display: flex;
   flex: 0 0 auto;
   flex-direction: column;
@@ -402,55 +380,6 @@ watch(() => studentStore.currentStudentId, load);
 .stat-card > span:last-child {
   color: var(--muted);
   font-size: 10.5px;
-}
-
-.quick-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-}
-
-.quick-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 7px;
-  padding: 12px 4px;
-  border: 0;
-  border-radius: 16px;
-  background: var(--surface);
-  color: var(--text-2);
-  font-size: 11px;
-  font-weight: 600;
-  box-shadow: var(--shadow-soft);
-}
-
-.quick-icon {
-  display: grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  border-radius: 14px;
-}
-
-.quick-icon.camera {
-  background: #eef2ff;
-  color: #4f46e5;
-}
-
-.quick-icon.edit {
-  background: #ccfbf1;
-  color: #0d9488;
-}
-
-.quick-icon.review {
-  background: #fef3c7;
-  color: #d97706;
-}
-
-.quick-icon.paper {
-  background: #ffe4e6;
-  color: #e11d48;
 }
 
 .panel {
@@ -542,14 +471,14 @@ watch(() => studentStore.currentStudentId, load);
   flex: 1;
   overflow: hidden;
   border-radius: 6px;
-  background: linear-gradient(to top, #eef2ff, transparent);
+  background: linear-gradient(to top, #e8f7ee, transparent);
 }
 
 .trend-track span {
   display: block;
   width: 100%;
   border-radius: 6px 6px 3px 3px;
-  background: linear-gradient(to top, #6366f1, #a5b4fc);
+  background: linear-gradient(to top, #22c55e, #86efac);
 }
 
 .trend-label {

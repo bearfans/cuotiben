@@ -47,9 +47,6 @@ interface SeedQuestion {
   errorReason?: string;
   difficulty: number;
   mastery: number;
-  reviewCount: number;
-  intervalDays: number;
-  nextReviewOffsetDays: number;
   knowledgePoints: string[];
 }
 
@@ -74,9 +71,6 @@ const QUESTIONS: SeedQuestion[] = [
     errorReason: '把除法看成了乘法，用 $24\\times\\frac{3}{5}$ 计算。',
     difficulty: 3,
     mastery: 1,
-    reviewCount: 2,
-    intervalDays: 2,
-    nextReviewOffsetDays: 0,
     knowledgePoints: ['分数与小数'],
   },
   {
@@ -92,9 +86,6 @@ const QUESTIONS: SeedQuestion[] = [
     analysis: '$12.5\\times 8=100$，$3.6\\div 0.4=9$，所以 $100-9=91$。',
     difficulty: 2,
     mastery: 4,
-    reviewCount: 4,
-    intervalDays: 7,
-    nextReviewOffsetDays: 2,
     knowledgePoints: ['分数与小数', '整数运算'],
   },
   {
@@ -111,9 +102,6 @@ const QUESTIONS: SeedQuestion[] = [
     errorReason: '只算了一圈的周长，忘记乘 2。',
     difficulty: 3,
     mastery: 2,
-    reviewCount: 1,
-    intervalDays: 1,
-    nextReviewOffsetDays: -1,
     knowledgePoints: ['平面图形'],
   },
   {
@@ -136,9 +124,6 @@ const QUESTIONS: SeedQuestion[] = [
     errorReason: '对形近字辨析不准确。',
     difficulty: 2,
     mastery: 3,
-    reviewCount: 3,
-    intervalDays: 4,
-    nextReviewOffsetDays: 0,
     knowledgePoints: ['字音字形', '词语运用'],
   },
   {
@@ -154,9 +139,6 @@ const QUESTIONS: SeedQuestion[] = [
     analysis: '出自王之涣《登鹳雀楼》。',
     difficulty: 1,
     mastery: 5,
-    reviewCount: 5,
-    intervalDays: 15,
-    nextReviewOffsetDays: 10,
     knowledgePoints: ['古诗文默写'],
   },
   {
@@ -179,9 +161,6 @@ const QUESTIONS: SeedQuestion[] = [
     errorReason: '没有注意主语是第三人称单数。',
     difficulty: 2,
     mastery: 2,
-    reviewCount: 2,
-    intervalDays: 2,
-    nextReviewOffsetDays: 0,
     knowledgePoints: ['一般现在时'],
   },
   {
@@ -197,9 +176,6 @@ const QUESTIONS: SeedQuestion[] = [
     analysis: 'apple 是可数名词，some 后接可数名词复数 apples。',
     difficulty: 2,
     mastery: 3,
-    reviewCount: 1,
-    intervalDays: 4,
-    nextReviewOffsetDays: 3,
     knowledgePoints: ['名词单复数'],
   },
   {
@@ -217,9 +193,6 @@ const QUESTIONS: SeedQuestion[] = [
     errorReason: '没有抓住“蒸发吸热”这一关键知识点。',
     difficulty: 3,
     mastery: 1,
-    reviewCount: 0,
-    intervalDays: 1,
-    nextReviewOffsetDays: 0,
     knowledgePoints: ['物质科学'],
   },
   {
@@ -243,9 +216,6 @@ const QUESTIONS: SeedQuestion[] = [
     errorReason: '体积单位换算错误，把 $200\\,\\text{cm}^3$ 当成了 $0.02\\,\\text{m}^3$。',
     difficulty: 3,
     mastery: 2,
-    reviewCount: 1,
-    intervalDays: 2,
-    nextReviewOffsetDays: 0,
     knowledgePoints: ['浮力'],
   },
   {
@@ -263,9 +233,6 @@ const QUESTIONS: SeedQuestion[] = [
     errorReason: '去分母时右边的 1 忘记乘 6。',
     difficulty: 4,
     mastery: 1,
-    reviewCount: 2,
-    intervalDays: 2,
-    nextReviewOffsetDays: -2,
     knowledgePoints: ['方程与不等式'],
   },
   {
@@ -281,9 +248,6 @@ const QUESTIONS: SeedQuestion[] = [
     analysis: '力是改变物体运动状态的原因，运动状态改变说明受到非平衡力。',
     difficulty: 2,
     mastery: 4,
-    reviewCount: 3,
-    intervalDays: 7,
-    nextReviewOffsetDays: 5,
     knowledgePoints: ['力与运动'],
   },
   {
@@ -300,9 +264,6 @@ const QUESTIONS: SeedQuestion[] = [
     errorReason: '忽略时间状语，误用一般现在时。',
     difficulty: 2,
     mastery: 3,
-    reviewCount: 2,
-    intervalDays: 4,
-    nextReviewOffsetDays: 1,
     knowledgePoints: ['一般过去时'],
   },
 ];
@@ -387,9 +348,7 @@ async function main(): Promise<void> {
   });
 
   console.log('Seeding wrong questions...');
-  const now = Date.now();
   for (const question of QUESTIONS) {
-    const nextReviewAt = new Date(now + question.nextReviewOffsetDays * 86_400_000);
     const data: Prisma.WrongQuestionUncheckedCreateInput = {
       id: question.id,
       userId: DEMO_USER_ID,
@@ -407,22 +366,12 @@ async function main(): Promise<void> {
       difficulty: question.difficulty,
       mastery: question.mastery,
       source: 'MANUAL',
-      reviewCount: question.reviewCount,
-      intervalDays: question.intervalDays,
-      nextReviewAt,
-      lastReviewedAt:
-        question.reviewCount > 0
-          ? new Date(now - Math.max(1, question.intervalDays) * 86_400_000)
-          : null,
     };
     await prisma.wrongQuestion.upsert({
       where: { id: question.id },
       update: {
         stem: question.stem,
         mastery: question.mastery,
-        nextReviewAt,
-        intervalDays: question.intervalDays,
-        reviewCount: question.reviewCount,
       },
       create: data,
     });
@@ -453,34 +402,6 @@ async function main(): Promise<void> {
     await prisma.knowledgePoint.update({
       where: { id: row.knowledgePointId },
       data: { usageCount: row._count._all },
-    });
-  }
-
-  console.log('Seeding review history...');
-  const reviewSeed = [
-    { id: '00000000-0000-4000-8000-000000002001', questionId: QUESTIONS[1].id, daysAgo: 6, rating: 'GOOD' as const },
-    { id: '00000000-0000-4000-8000-000000002002', questionId: QUESTIONS[4].id, daysAgo: 5, rating: 'EASY' as const },
-    { id: '00000000-0000-4000-8000-000000002003', questionId: QUESTIONS[3].id, daysAgo: 3, rating: 'HARD' as const },
-    { id: '00000000-0000-4000-8000-000000002004', questionId: QUESTIONS[0].id, daysAgo: 2, rating: 'AGAIN' as const },
-    { id: '00000000-0000-4000-8000-000000002005', questionId: QUESTIONS[10].id, daysAgo: 1, rating: 'GOOD' as const },
-  ];
-  for (const log of reviewSeed) {
-    const completedAt = new Date(now - log.daysAgo * 86_400_000);
-    await prisma.reviewLog.upsert({
-      where: { id: log.id },
-      update: {},
-      create: {
-        id: log.id,
-        userId: DEMO_USER_ID,
-        wrongQuestionId: log.questionId,
-        rating: log.rating,
-        scheduledAt: completedAt,
-        completedAt,
-        intervalBefore: 1,
-        intervalAfter: 4,
-        masteryBefore: 2,
-        masteryAfter: 3,
-      },
     });
   }
 

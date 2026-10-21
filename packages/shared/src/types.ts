@@ -1,4 +1,4 @@
-import type { Grade, QuestionType, ReviewRating, Semester, Stage } from './constants';
+import type { Grade, QuestionType, Semester, Stage } from './constants';
 
 export interface User {
   id: string;
@@ -71,10 +71,6 @@ export interface WrongQuestion {
   note?: string | null;
   knowledgePoints: KnowledgePoint[];
   images: QuestionImage[];
-  reviewCount: number;
-  intervalDays: number;
-  nextReviewAt: string;
-  lastReviewedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -121,45 +117,6 @@ export interface AiJob {
   images: AiJobImage[];
   createdAt: string;
   finishedAt?: string | null;
-}
-
-export interface ReviewLog {
-  id: string;
-  rating: ReviewRating;
-  scheduledAt: string;
-  completedAt: string;
-  intervalBefore: number;
-  intervalAfter: number;
-  masteryBefore: number;
-  masteryAfter: number;
-}
-
-export interface ReviewTask extends WrongQuestion {
-  overdue: boolean;
-}
-
-export interface ReviewToday {
-  today: ReviewTask[];
-  overdue: ReviewTask[];
-  completedToday: number;
-  totalDue: number;
-}
-
-export interface ReviewHistoryItem extends ReviewLog {
-  wrongQuestion: {
-    id: string;
-    stem: string;
-    subjectId: string;
-    subjectName: string;
-    grade: number;
-  };
-}
-
-export interface ReviewCalendar {
-  month: string;
-  days: number;
-  due: { date: string; count: number }[];
-  completed: { date: string; count: number }[];
 }
 
 export interface PaperItem {
@@ -219,14 +176,11 @@ export interface OverviewStats {
   totalQuestions: number;
   activeQuestions: number;
   masteredQuestions: number;
-  dueToday: number;
-  overdue: number;
   addedThisWeek: number;
   addedLast7Days: number;
   subjectDistribution: { subjectId: string; name: string; color: string; count: number }[];
   masteryDistribution: { mastery: number; count: number }[];
   trend: { date: string; count: number }[];
-  completed7Days: number;
 }
 
 export interface KnowledgeStat {
@@ -235,7 +189,6 @@ export interface KnowledgeStat {
   subjectId: string;
   count: number;
   avgMastery: number;
-  overdueCount: number;
   lastWrongAt: string | null;
   weakScore: number;
 }

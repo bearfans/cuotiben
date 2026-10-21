@@ -3,10 +3,8 @@ import { SUBJECT_MAP, type KnowledgeStat, type OverviewStats } from '@myos/share
 import { PrismaService } from '../common/prisma/prisma.service';
 import {
   daysAgoStart,
-  endOfToday,
   formatDate,
   lastNDates,
-  startOfToday,
   startOfWeek,
 } from '../common/utils/date.util';
 import { StudentsService } from '../students/students.service';
@@ -29,21 +27,11 @@ export class StatsService {
         mastery: true,
         status: true,
         createdAt: true,
-        nextReviewAt: true,
       },
     });
 
     const now = new Date();
-    const start = startOfToday();
-    const end = endOfToday();
     const weekStart = startOfWeek();
-    const completed7Days = await this.prisma.reviewLog.count({
-      where: {
-        userId,
-        wrongQuestion: { studentId: student.id },
-        completedAt: { gte: daysAgoStart(6) },
-      },
-    });
 
     const active = questions.filter((question) => question.status === 'ACTIVE');
     const subjectCounts = new Map<string, number>();
@@ -61,12 +49,6 @@ export class StatsService {
       totalQuestions: questions.length,
       activeQuestions: active.length,
       masteredQuestions: active.filter((question) => question.mastery >= 5).length,
-      dueToday: active.filter(
-        (question) => question.nextReviewAt.getTime() <= end.getTime(),
-      ).length,
-      overdue: active.filter(
-        (question) => question.nextReviewAt.getTime() < start.getTime(),
-      ).length,
       addedThisWeek: active.filter((question) => question.createdAt >= weekStart).length,
       addedLast7Days: active.filter(
         (question) => question.createdAt >= daysAgoStart(6) && question.createdAt <= now,
@@ -87,7 +69,6 @@ export class StatsService {
         date,
         count: trendCounts.get(date) ?? 0,
       })),
-      completed7Days,
     };
   }
 
@@ -106,7 +87,7 @@ export class StatsService {
       include: {
         knowledgePoint: true,
         wrongQuestion: {
-          select: { mastery: true, nextReviewAt: true, createdAt: true },
+          select: { mastery: true, createdAt: true },
         },
       },
     });
@@ -118,7 +99,6 @@ export class StatsService {
         subjectId: string;
         count: number;
         masterySum: number;
-        overdueCount: number;
         lastWrongAt: Date | null;
       }
     >();
@@ -129,14 +109,10 @@ export class StatsService {
         subjectId: link.knowledgePoint.subjectId,
         count: 0,
         masterySum: 0,
-        overdueCount: 0,
         lastWrongAt: null,
       };
       current.count += 1;
       current.masterySum += link.wrongQuestion.mastery;
-      if (link.wrongQuestion.nextReviewAt.getTime() < startOfToday().getTime()) {
-        current.overdueCount += 1;
-      }
       if (!current.lastWrongAt || link.wrongQuestion.createdAt > current.lastWrongAt) {
         current.lastWrongAt = link.wrongQuestion.createdAt;
       }
@@ -152,9 +128,8 @@ export class StatsService {
           subjectId: item.subjectId,
           count: item.count,
           avgMastery,
-          overdueCount: item.overdueCount,
           lastWrongAt: item.lastWrongAt?.toISOString() ?? null,
-          weakScore: item.count * 0.5 + (5 - avgMastery) * 2 + item.overdueCount * 0.5,
+          weakScore: item.count * 0.5 + (5 - avgMastery) * 2,
         };
       })
       .sort((a, b) => b.weakScore - a.weakScore)

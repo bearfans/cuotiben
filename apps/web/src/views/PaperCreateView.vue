@@ -1,6 +1,6 @@
 <template>
   <div class="paper-create">
-    <PageHeader title="生成试卷" subtitle="从错题中挑选题目，生成可打印复习卷" />
+    <PageHeader title="生成试卷" subtitle="从错题中挑选题目，生成可打印练习卷" />
 
     <div v-if="!studentStore.currentStudent" class="page">
       <div class="card panel">
@@ -13,7 +13,7 @@
     <template v-else>
       <div class="page create-body">
         <div v-if="paperSelection.count && usingPreselection" class="preselection card">
-          <van-icon name="checked" color="#4f46e5" />
+          <van-icon name="checked" color="#16a34a" />
           <span>已从错题本带入 <b>{{ paperSelection.count }}</b> 道题</span>
           <button type="button" @click="loadAllCandidates">加载更多错题</button>
         </div>
@@ -85,7 +85,7 @@
           <button type="button" class="select-all" @click="toggleSelectAll">
             <van-icon
               :name="allSelected ? 'checked' : 'circle'"
-              :color="allSelected ? '#4f46e5' : '#cbd5e1'"
+              :color="allSelected ? '#16a34a' : '#cbd5e1'"
               size="19"
             />
             {{ allSelected ? '取消全选' : '全选' }}
@@ -109,7 +109,7 @@
             <div class="candidate-check">
               <van-icon
                 :name="selectedIds.has(candidate.id) ? 'checked' : 'circle'"
-                :color="selectedIds.has(candidate.id) ? '#4f46e5' : '#cbd5e1'"
+                :color="selectedIds.has(candidate.id) ? '#16a34a' : '#cbd5e1'"
                 size="21"
               />
             </div>

@@ -1,7 +1,7 @@
 <template>
   <div>
     <button class="student-switch" type="button" @click="show = true">
-      <span class="avatar" :style="{ background: avatarColor }">{{ initial }}</span>
+      <span class="avatar">{{ initial }}</span>
       <span class="info">
         <strong>{{ student?.name ?? '添加孩子' }}</strong>
         <small v-if="student">{{ gradeLabel(student.grade) }} · {{ semesterLabel(student.semester) }}</small>
@@ -26,14 +26,14 @@
           :class="{ active: item.id === currentStudentId }"
           @click="choose(item.id)"
         >
-          <span class="avatar" :style="{ background: colorFor(item.name) }">
+          <span class="avatar">
             {{ item.name.slice(0, 1) }}
           </span>
           <span class="option-main">
             <strong>{{ item.name }}</strong>
             <small>{{ gradeLabel(item.grade) }} · {{ semesterLabel(item.semester) }}</small>
           </span>
-          <van-icon v-if="item.id === currentStudentId" name="success" color="#4f46e5" />
+          <van-icon v-if="item.id === currentStudentId" name="success" color="#16a34a" />
         </button>
       </div>
       <div class="sheet-footer">
@@ -59,14 +59,6 @@ const student = computed(() => studentStore.currentStudent);
 const students = computed(() => studentStore.students);
 const currentStudentId = computed(() => studentStore.currentStudentId);
 const initial = computed(() => student.value?.name.slice(0, 1) ?? '＋');
-const avatarColor = computed(() => colorFor(student.value?.name ?? ''));
-
-const palette = ['#4f46e5', '#0d9488', '#e11d48', '#d97706', '#7c3aed', '#0284c7'];
-
-function colorFor(name: string): string {
-  const index = Array.from(name).reduce((sum, char) => sum + char.charCodeAt(0), 0);
-  return palette[index % palette.length];
-}
 
 function choose(id: string): void {
   studentStore.selectStudent(id);
@@ -101,6 +93,8 @@ function goProfile(): void {
   height: 34px;
   flex: 0 0 auto;
   border-radius: 50%;
+  background: var(--avatar-bg);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.28);
   color: #fff;
   font-size: 14px;
   font-weight: 700;
@@ -168,7 +162,7 @@ function goProfile(): void {
 }
 
 .student-option.active {
-  border-color: rgba(79, 70, 229, 0.4);
+  border-color: rgba(22, 163, 74, 0.4);
   background: var(--brand-soft);
 }
 

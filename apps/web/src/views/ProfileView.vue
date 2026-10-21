@@ -27,7 +27,7 @@
             class="student-card card"
             :class="{ active: student.id === studentStore.currentStudentId }"
           >
-            <span class="student-avatar" :style="{ background: colorFor(student.name) }">
+            <span class="student-avatar">
               {{ student.name.slice(0, 1) }}
             </span>
             <div class="student-main">
@@ -76,7 +76,7 @@
       <section class="section">
         <div class="menu-card card">
           <button type="button" class="menu-row" @click="router.push('/knowledge')">
-            <span class="menu-icon purple"><van-icon name="label-o" /></span>
+            <span class="menu-icon green"><van-icon name="label-o" /></span>
             <span class="menu-main">
               <strong>知识点库</strong>
               <small>查看、合并和整理学科标签</small>
@@ -84,7 +84,7 @@
             <van-icon name="arrow" color="#cbd5e1" />
           </button>
           <button type="button" class="menu-row" @click="router.push('/papers')">
-            <span class="menu-icon teal"><van-icon name="description-o" /></span>
+            <span class="menu-icon green"><van-icon name="description-o" /></span>
             <span class="menu-main">
               <strong>我的试卷</strong>
               <small>打印或下载历史组卷</small>
@@ -113,7 +113,7 @@
       <div class="logout-area">
         <van-button block round plain type="danger" @click="logout">退出登录</van-button>
       </div>
-      <p class="app-footer">用 AI 整理错题，让每次复习都有重点</p>
+      <p class="app-footer">用 AI 整理错题，让每次练习都有重点</p>
     </div>
 
     <van-popup v-model:show="showStudentPopup" position="bottom" round>
@@ -159,13 +159,13 @@
         <h3>错题本</h3>
         <p class="about-version">版本 1.0.0</p>
         <p class="about-desc">
-          一款面向家庭的 AI 错题本：拍照识别题目、自动归纳知识点、按记忆曲线安排复习，
-          并把错题生成可打印的复习试卷。
+          一款面向家庭的 AI 错题本：拍照识别题目、自动归纳知识点，
+          并把错题生成可打印的试卷。
         </p>
         <div class="about-features">
           <span>拍照识别</span>
           <span>知识点归纳</span>
-          <span>科学复习</span>
+          <span>薄弱点分析</span>
           <span>A4 组卷</span>
         </div>
         <van-button block round @click="showAbout = false">知道了</van-button>
@@ -210,12 +210,6 @@ const studentForm = reactive<{ name: string; grade: Grade; semester: Semester }>
 });
 
 const initial = computed(() => (auth.user?.displayName || auth.user?.username || '我').slice(0, 1));
-const palette = ['#4f46e5', '#0d9488', '#e11d48', '#d97706', '#7c3aed', '#0284c7'];
-
-function colorFor(name: string): string {
-  const index = Array.from(name).reduce((sum, char) => sum + char.charCodeAt(0), 0);
-  return palette[index % palette.length];
-}
 
 async function loadQuota(): Promise<void> {
   try {
@@ -324,7 +318,7 @@ onMounted(loadQuota);
   gap: 13px;
   padding: 18px;
   background:
-    radial-gradient(circle at 90% 0%, rgba(99, 102, 241, 0.1), transparent 40%),
+    radial-gradient(circle at 90% 0%, rgba(34, 197, 94, 0.1), transparent 40%),
     var(--surface);
 }
 
@@ -335,11 +329,11 @@ onMounted(loadQuota);
   height: 54px;
   flex: 0 0 auto;
   border-radius: 18px;
-  background: linear-gradient(145deg, #4f46e5, #6366f1);
+  background: var(--avatar-bg);
   color: #fff;
   font-size: 22px;
   font-weight: 700;
-  box-shadow: 0 8px 18px rgba(79, 70, 229, 0.25);
+  box-shadow: 0 8px 18px rgba(22, 163, 74, 0.25);
 }
 
 .user-main {
@@ -372,7 +366,7 @@ onMounted(loadQuota);
   align-items: center;
   gap: 2px;
   padding: 5px 10px;
-  border: 1px dashed #c7d2fe;
+  border: 1px dashed #bbf7d0;
   border-radius: 999px;
   background: transparent;
   color: var(--brand);
@@ -394,7 +388,7 @@ onMounted(loadQuota);
 }
 
 .student-card.active {
-  box-shadow: 0 0 0 1.5px rgba(79, 70, 229, 0.35);
+  box-shadow: 0 0 0 1.5px rgba(22, 163, 74, 0.35);
 }
 
 .student-avatar {
@@ -404,6 +398,7 @@ onMounted(loadQuota);
   height: 42px;
   flex: 0 0 auto;
   border-radius: 50%;
+  background: var(--avatar-bg);
   color: #fff;
   font-size: 16px;
   font-weight: 700;
@@ -467,7 +462,7 @@ onMounted(loadQuota);
   align-items: center;
   gap: 2px;
   padding: 24px;
-  border: 1.5px dashed #c7d2fe;
+  border: 1.5px dashed #bbf7d0;
   border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.5);
   color: var(--brand);
@@ -546,7 +541,7 @@ onMounted(loadQuota);
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #6366f1, #4f46e5);
+  background: linear-gradient(90deg, #22c55e, #16a34a);
 }
 
 .quota-tip {
@@ -586,14 +581,9 @@ onMounted(loadQuota);
   font-size: 16px;
 }
 
-.menu-icon.purple {
+.menu-icon.green {
   background: var(--brand-soft);
   color: var(--brand);
-}
-
-.menu-icon.teal {
-  background: var(--teal-soft);
-  color: var(--teal);
 }
 
 .menu-icon.amber {
@@ -711,7 +701,7 @@ onMounted(loadQuota);
   height: 60px;
   margin: 0 auto 10px;
   border-radius: 18px;
-  background: linear-gradient(140deg, #4f46e5, #0d9488);
+  background: var(--avatar-bg);
   color: #fff;
 }
 

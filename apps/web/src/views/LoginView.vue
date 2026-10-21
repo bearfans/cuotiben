@@ -9,7 +9,7 @@
       <div class="hero-tags">
         <span>AI 拍照识别</span>
         <span>知识点归纳</span>
-        <span>科学复习</span>
+        <span>薄弱点分析</span>
         <span>一键组卷</span>
       </div>
     </div>
@@ -90,7 +90,7 @@
       </button>
     </div>
 
-    <p class="footer">专注错题整理 · 让复习更有方向</p>
+    <p class="footer">专注错题整理 · 让学习更有方向</p>
   </div>
 </template>
 
@@ -166,9 +166,9 @@ async function submit(): Promise<void> {
   margin: 0 auto;
   padding: 0 20px calc(24px + var(--safe-bottom));
   background:
-    radial-gradient(circle at 88% 8%, rgba(99, 102, 241, 0.22), transparent 32%),
-    radial-gradient(circle at 8% 28%, rgba(13, 148, 136, 0.14), transparent 30%),
-    linear-gradient(165deg, #eef2ff 0%, #f6f8fc 46%, #f4f6fb 100%);
+    radial-gradient(circle at 88% 8%, rgba(34, 197, 94, 0.22), transparent 32%),
+    radial-gradient(circle at 8% 28%, rgba(22, 163, 74, 0.14), transparent 30%),
+    linear-gradient(165deg, #e8f7ee 0%, #f7fbf7 46%, #f3f8f3 100%);
 }
 
 .hero {
@@ -183,9 +183,9 @@ async function submit(): Promise<void> {
   height: 68px;
   margin: 0 auto 16px;
   border-radius: 22px;
-  background: linear-gradient(140deg, #4f46e5, #6366f1 55%, #0d9488);
+  background: linear-gradient(140deg, #15803d, #16a34a 55%, #22c55e);
   color: #fff;
-  box-shadow: 0 14px 32px rgba(79, 70, 229, 0.3);
+  box-shadow: 0 14px 32px rgba(22, 163, 74, 0.3);
 }
 
 .hero h1 {
@@ -212,7 +212,7 @@ async function submit(): Promise<void> {
 
 .hero-tags span {
   padding: 4px 10px;
-  border: 1px solid rgba(79, 70, 229, 0.14);
+  border: 1px solid rgba(22, 163, 74, 0.14);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.6);
   color: var(--brand);
@@ -307,7 +307,7 @@ async function submit(): Promise<void> {
   width: calc(100% - 40px);
   margin: 12px auto 0;
   padding: 9px;
-  border: 1px dashed rgba(79, 70, 229, 0.25);
+  border: 1px dashed rgba(22, 163, 74, 0.25);
   border-radius: 10px;
   background: var(--brand-soft);
   color: var(--text-2);

@@ -297,7 +297,7 @@ export class QueryQuestionsDto {
   pageSize?: number;
 
   @IsOptional()
-  @IsIn(['createdAt', 'updatedAt', 'mastery', 'nextReviewAt', 'difficulty'])
+  @IsIn(['createdAt', 'updatedAt', 'mastery', 'difficulty'])
   sortBy?: string;
 
   @IsOptional()

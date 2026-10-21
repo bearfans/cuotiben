@@ -6,8 +6,8 @@
       <van-tabs
         v-model:active="activeTab"
         background="transparent"
-        color="#4f46e5"
-        title-active-color="#4f46e5"
+        color="#16a34a"
+        title-active-color="#16a34a"
         title-inactive-color="#94a3b8"
         line-width="24"
         @change="onTabChange"
@@ -59,7 +59,6 @@
                   </div>
                   <div class="point-meta">
                     <span>{{ point.count }} 道错题</span>
-                    <span v-if="point.overdueCount" class="overdue">{{ point.overdueCount }} 道待复习</span>
                     <span v-if="point.lastWrongAt">最近 {{ formatDate(point.lastWrongAt, 'MM-DD') }}</span>
                   </div>
                 </div>
@@ -190,7 +189,7 @@
             <span class="muted small">{{ point.usageCount }} 题</span>
             <van-icon
               :name="mergeTargetId === point.id ? 'success' : 'circle'"
-              :color="mergeTargetId === point.id ? '#4f46e5' : '#cbd5e1'"
+              :color="mergeTargetId === point.id ? '#16a34a' : '#cbd5e1'"
             />
           </button>
           <p v-if="!mergeTargets.length" class="muted empty-merge">该学科下没有其他可合并的知识点</p>
@@ -571,10 +570,6 @@ onMounted(() => {
   font-size: 9.5px;
 }
 
-.point-meta .overdue {
-  color: var(--rose);
-}
-
 .point-action {
   display: flex;
   flex-direction: column;
@@ -620,7 +615,7 @@ onMounted(() => {
   border-radius: 50%;
   background: var(--brand);
   color: #fff;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25);
 }
 
 .library-list {
@@ -722,7 +717,7 @@ onMounted(() => {
 }
 
 .merge-row.active {
-  border-color: rgba(79, 70, 229, 0.4);
+  border-color: rgba(22, 163, 74, 0.4);
   background: var(--brand-soft);
 }
 

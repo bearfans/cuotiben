@@ -18,7 +18,7 @@
         </div>
         <h2>AI 正在识别题目</h2>
         <p>正在提取题干、答案和知识点，通常需要几秒到半分钟</p>
-        <van-loading size="22" color="#4f46e5" />
+        <van-loading size="22" color="#16a34a" />
       </div>
 
       <template v-else-if="job">
@@ -86,7 +86,7 @@
               <button type="button" class="check-btn" @click="item.include = !item.include">
                 <van-icon
                   :name="item.include ? 'checked' : 'circle'"
-                  :color="item.include ? '#4f46e5' : '#cbd5e1'"
+                  :color="item.include ? '#16a34a' : '#cbd5e1'"
                   size="22"
                 />
               </button>
@@ -148,7 +148,7 @@
       <button type="button" class="footer-select" @click="toggleAll">
         <van-icon
           :name="allSelected ? 'checked' : 'circle'"
-          :color="allSelected ? '#4f46e5' : '#cbd5e1'"
+          :color="allSelected ? '#16a34a' : '#cbd5e1'"
           size="20"
         />
         <span>全选</span>
@@ -517,7 +517,7 @@ onBeforeUnmount(stopPolling);
   height: 74px;
   margin-bottom: 18px;
   border-radius: 24px;
-  background: linear-gradient(145deg, #eef2ff, #e0e7ff);
+  background: linear-gradient(145deg, #e8f7ee, #d7f2e1);
   color: var(--brand);
   animation: pulse 1.6s ease-in-out infinite;
 }
@@ -526,11 +526,11 @@ onBeforeUnmount(stopPolling);
   0%,
   100% {
     transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.12);
+    box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.12);
   }
   50% {
     transform: scale(1.04);
-    box-shadow: 0 0 0 14px rgba(79, 70, 229, 0);
+    box-shadow: 0 0 0 14px rgba(22, 163, 74, 0);
   }
 }
 
@@ -590,7 +590,7 @@ onBeforeUnmount(stopPolling);
 }
 
 .image-status.succeeded {
-  background: rgba(13, 148, 136, 0.86);
+  background: rgba(22, 163, 74, 0.86);
 }
 
 .job-meta {
@@ -689,8 +689,8 @@ onBeforeUnmount(stopPolling);
 .confidence {
   padding: 2px 6px;
   border-radius: 5px;
-  background: var(--teal-soft);
-  color: var(--teal);
+  background: var(--brand-soft);
+  color: var(--brand);
   font-size: 9.5px;
   font-weight: 700;
 }
@@ -757,7 +757,7 @@ onBeforeUnmount(stopPolling);
 }
 
 .answer {
-  color: var(--teal);
+  color: var(--brand-dark);
   font-size: 11.5px;
   font-weight: 600;
 }
@@ -785,7 +785,7 @@ onBeforeUnmount(stopPolling);
   width: 100%;
   margin-top: 14px;
   padding: 13px;
-  border: 1px dashed #c7d2fe;
+  border: 1px dashed #bbf7d0;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.5);
   color: var(--brand);

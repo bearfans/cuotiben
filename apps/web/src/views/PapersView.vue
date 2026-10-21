@@ -1,6 +1,6 @@
 <template>
   <div>
-    <PageHeader title="错题组卷" subtitle="从错题本生成可打印的复习试卷" :back="false">
+    <PageHeader title="错题组卷" subtitle="从错题本生成可打印的练习试卷" :back="false">
       <template #right>
         <button type="button" class="header-add" @click="router.push('/papers/new')">
           <van-icon name="plus" /> 新建
@@ -31,7 +31,7 @@
       </div>
 
       <div v-if="paperSelection.count" class="selection-banner card" @click="router.push('/papers/new')">
-        <van-icon name="checked" color="#4f46e5" size="18" />
+        <van-icon name="checked" color="#16a34a" size="18" />
         <span>已从错题本选择 <b>{{ paperSelection.count }}</b> 道题</span>
         <van-icon name="arrow" color="#94a3b8" />
       </div>
@@ -77,7 +77,7 @@
           <EmptyState
             emoji="📄"
             title="还没有生成过试卷"
-            description="从错题中挑几道题，生成一张专属复习卷，打印出来练一练"
+            description="从错题中挑几道题，生成一张专属练习卷，打印出来练一练"
           >
             <van-button round type="primary" @click="router.push('/papers/new')">生成第一份试卷</van-button>
           </EmptyState>
@@ -152,9 +152,9 @@ onMounted(load);
   border-radius: 22px;
   background:
     radial-gradient(circle at 92% 12%, rgba(255, 255, 255, 0.24), transparent 38%),
-    linear-gradient(135deg, #0f766e, #0d9488 55%, #14b8a6);
+    linear-gradient(135deg, #15803d, #16a34a 55%, #22c55e);
   color: #fff;
-  box-shadow: 0 12px 28px rgba(13, 148, 136, 0.22);
+  box-shadow: 0 12px 28px rgba(22, 163, 74, 0.22);
 }
 
 .banner-copy {
@@ -189,7 +189,7 @@ onMounted(load);
   height: 32px;
   border: 0;
   background: #fff;
-  color: #0f766e;
+  color: var(--brand-dark);
   font-size: 11.5px;
 }
 
@@ -230,13 +230,13 @@ onMounted(load);
   display: block;
   height: 4px;
   border-radius: 999px;
-  background: #ccfbf1;
+  background: #dcfce7;
 }
 
 .paper-sheet.front i:nth-child(1) {
   width: 70%;
   height: 6px;
-  background: #5eead4;
+  background: #86efac;
 }
 
 .paper-sheet.front i:nth-child(3) {
@@ -292,8 +292,8 @@ onMounted(load);
   height: 46px;
   flex: 0 0 auto;
   border-radius: 14px;
-  background: var(--teal-soft);
-  color: var(--teal);
+  background: var(--brand-soft);
+  color: var(--brand);
 }
 
 .paper-main {
@@ -334,8 +334,8 @@ onMounted(load);
 }
 
 .tag.pdf {
-  background: var(--teal-soft);
-  color: var(--teal);
+  background: var(--brand-soft);
+  color: var(--brand);
 }
 
 .empty-card {

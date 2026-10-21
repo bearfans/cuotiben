@@ -8,7 +8,6 @@ import type {
 } from '@myos/shared';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { endOfDay } from '../common/utils/date.util';
-import { nextReviewDate } from '../common/utils/date.util';
 import { KnowledgePointsService } from '../knowledge-points/knowledge-points.service';
 import { StudentsService } from '../students/students.service';
 import { UploadsService } from '../uploads/uploads.service';
@@ -157,7 +156,6 @@ export class WrongQuestionsService {
             mastery: input.mastery ?? 0,
             source: input.source ?? (dto.sourceJobId ? 'AI' : 'MANUAL'),
             sourceJobId: input.sourceJobId ?? dto.sourceJobId,
-            nextReviewAt: nextReviewDate(1),
           },
         });
 
@@ -303,21 +301,6 @@ export class WrongQuestionsService {
     return question;
   }
 
-  async findDue(userId: string, studentId: string, end: Date): Promise<WrongQuestion[]> {
-    const questions = await this.prisma.wrongQuestion.findMany({
-      where: {
-        userId,
-        studentId,
-        deletedAt: null,
-        status: 'ACTIVE',
-        nextReviewAt: { lte: end },
-      },
-      include: this.detailInclude(),
-      orderBy: { nextReviewAt: 'asc' },
-    });
-    return questions.map((question) => this.toDto(question));
-  }
-
   private async assertUploads(userId: string, ids: string[]): Promise<void> {
     const unique = Array.from(new Set(ids.filter(Boolean)));
     if (!unique.length) return;
@@ -395,10 +378,6 @@ export class WrongQuestionsService {
         width: image.uploadFile.width,
         height: image.uploadFile.height,
       })),
-      reviewCount: question.reviewCount,
-      intervalDays: question.intervalDays,
-      nextReviewAt: question.nextReviewAt.toISOString(),
-      lastReviewedAt: question.lastReviewedAt?.toISOString() ?? null,
       createdAt: question.createdAt.toISOString(),
       updatedAt: question.updatedAt.toISOString(),
     };

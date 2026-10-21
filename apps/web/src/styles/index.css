@@ -1,20 +1,20 @@
 :root {
-  --brand: #4f46e5;
-  --brand-dark: #4338ca;
-  --brand-soft: #eef2ff;
-  --teal: #0d9488;
-  --teal-soft: #ccfbf1;
+  --brand: #16a34a;
+  --brand-dark: #15803d;
+  --brand-soft: #e8f7ee;
+  --brand-light: #4ade80;
+  --avatar-bg: linear-gradient(145deg, #15803d 0%, #22c55e 100%);
   --amber: #f59e0b;
   --amber-soft: #fef3c7;
   --rose: #e11d48;
   --rose-soft: #ffe4e6;
-  --bg: #f4f6fb;
+  --bg: #f3f8f3;
   --surface: #ffffff;
-  --surface-soft: #f8fafc;
+  --surface-soft: #f6faf6;
   --text: #0f172a;
   --text-2: #475569;
   --muted: #94a3b8;
-  --line: #e8edf5;
+  --line: #e2ede4;
   --radius-lg: 22px;
   --radius: 16px;
   --radius-sm: 11px;
@@ -23,7 +23,7 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 
   --van-primary-color: var(--brand);
-  --van-success-color: var(--teal);
+  --van-success-color: var(--brand);
   --van-danger-color: var(--rose);
   --van-warning-color: var(--amber);
   --van-text-color: var(--text);
@@ -56,7 +56,7 @@ body,
 }
 
 body {
-  background: #e9edf5;
+  background: #e6efe6;
   color: var(--text);
   font-family:
     -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
@@ -189,7 +189,7 @@ a {
   border-color: var(--brand);
   background: var(--brand);
   color: #fff;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.24);
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.24);
 }
 
 .rich-text {
@@ -226,7 +226,7 @@ a {
   height: 108px;
   margin-bottom: 12px;
   border-radius: var(--radius);
-  background: linear-gradient(90deg, #eef1f7 25%, #f8fafc 37%, #eef1f7 63%);
+  background: linear-gradient(90deg, #e8f0e9 25%, #f6faf6 37%, #e8f0e9 63%);
   background-size: 400% 100%;
   animation: skeleton 1.3s ease infinite;
 }
@@ -286,7 +286,7 @@ a {
   display: flex;
   gap: 10px;
   padding: 10px 0 0;
-  background: linear-gradient(to top, var(--bg) 68%, rgba(244, 246, 251, 0));
+  background: linear-gradient(to top, var(--bg) 68%, rgba(243, 248, 243, 0));
 }
 
 .van-button {
@@ -318,9 +318,14 @@ a {
 }
 
 .van-tabbar {
+  /* Vant 对 fixed tabbar 使用 left: 0，桌面端需要手动居中到 600px 应用容器下方 */
+  right: auto;
+  left: 50%;
+  width: 100%;
   max-width: 600px;
   margin: 0 auto;
-  border-top: 1px solid rgba(226, 232, 240, 0.8);
+  transform: translateX(-50%);
+  border-top: 1px solid rgba(219, 234, 222, 0.8);
   box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.04);
 }
 

@@ -88,17 +88,6 @@ export const MASTERY_LABELS = ['未掌握', '很薄弱', '薄弱', '一般', '�
 
 export const MASTERY_COLORS = ['#ef4444', '#f97316', '#f59e0b', '#eab308', '#22c55e', '#10b981'];
 
-export const REVIEW_INTERVALS = [1, 2, 4, 7, 15, 30, 60, 90];
-
-export const REVIEW_RATINGS = [
-  { value: 'AGAIN', label: '没掌握', description: '明天重新复习', color: '#ef4444' },
-  { value: 'HARD', label: '有点模糊', description: '缩短复习间隔', color: '#f59e0b' },
-  { value: 'GOOD', label: '掌握了', description: '按计划继续', color: '#3b82f6' },
-  { value: 'EASY', label: '很熟练', description: '拉长复习间隔', color: '#10b981' },
-] as const;
-
-export type ReviewRating = (typeof REVIEW_RATINGS)[number]['value'];
-
 export const AI_JOB_STATUS_LABELS: Record<string, string> = {
   PENDING: '排队中',
   PROCESSING: '识别中',
@@ -139,23 +128,4 @@ export function normalizeKnowledgePoint(name: string): string {
     .replace(/[：:；;，,。.！!？?、]+$/g, '')
     .replace(/\s+/g, ' ')
     .toLowerCase();
-}
-
-export function nextInterval(current: number): number {
-  const found = REVIEW_INTERVALS.find((value) => value > current);
-  return found ?? Math.min(180, Math.round(current * 1.5));
-}
-
-export function addDaysToInterval(rating: ReviewRating, currentInterval: number): number {
-  switch (rating) {
-    case 'AGAIN':
-      return 1;
-    case 'HARD':
-      return Math.max(1, Math.round(currentInterval * 0.6));
-    case 'EASY':
-      return Math.min(180, Math.max(nextInterval(currentInterval), Math.round(currentInterval * 2.5)));
-    case 'GOOD':
-    default:
-      return nextInterval(currentInterval);
-  }
 }

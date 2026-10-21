@@ -2,7 +2,7 @@
   <div>
     <PageHeader
       :title="isEdit ? '编辑错题' : '手动录入'"
-      :subtitle="isEdit ? '修改后会自动保存到错题本' : '把错题完整记录下来，复习更高效'"
+      :subtitle="isEdit ? '修改后会自动保存到错题本' : '把错题完整记录下来，整理更高效'"
     />
 
     <div v-if="loading" class="page">

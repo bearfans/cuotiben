@@ -1,5 +1,3 @@
-# syntax=docker/dockerfile:1.7
-
 FROM node:22-bookworm-slim AS base
 ENV PNPM_HOME=/pnpm
 ENV PATH=$PNPM_HOME:$PATH
@@ -14,6 +12,10 @@ COPY packages/shared/package.json packages/shared/package.json
 RUN pnpm install --frozen-lockfile
 
 FROM deps AS build
+# Prisma 通过 openssl CLI 探测运行时版本；slim 镜像默认未安装，会导致生成错误的引擎目标
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends openssl \
+  && rm -rf /var/lib/apt/lists/*
 COPY . .
 RUN pnpm --filter @myos/shared build \
   && pnpm --filter @myos/api prisma:generate \
@@ -40,9 +42,9 @@ COPY apps/api/docker-entrypoint.sh /usr/local/bin/api-entrypoint
 RUN chmod +x /usr/local/bin/api-entrypoint \
   && mkdir -p /app/storage /ms-playwright \
   && cd /app/apps/api \
-  && ./node_modules/.bin/playwright install --with-deps chromium \
+  && ./node_modules/.bin/playwright install --with-deps --only-shell chromium \
   && rm -rf /var/lib/apt/lists/* \
-  && chown -R node:node /app /ms-playwright
+  && chown -R node:node /ms-playwright /app/storage
 USER node
 EXPOSE 3000
 ENTRYPOINT ["api-entrypoint"]

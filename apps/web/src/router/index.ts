@@ -30,8 +30,7 @@ const router = createRouter({
         },
         {
           path: 'questions/new',
-          name: 'question-new',
-          component: () => import('@/views/QuestionEditView.vue'),
+          redirect: { name: 'upload', query: { mode: 'manual' } },
         },
         {
           path: 'questions/:id',
@@ -43,12 +42,7 @@ const router = createRouter({
           name: 'question-edit',
           component: () => import('@/views/QuestionEditView.vue'),
         },
-        { path: 'review', name: 'review', component: () => import('@/views/ReviewView.vue') },
-        {
-          path: 'knowledge',
-          name: 'knowledge',
-          component: () => import('@/views/KnowledgeView.vue'),
-        },
+        { path: 'knowledge', name: 'knowledge', component: () => import('@/views/KnowledgeView.vue') },
         { path: 'papers', name: 'papers', component: () => import('@/views/PapersView.vue') },
         {
           path: 'papers/new',

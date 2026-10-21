@@ -7,7 +7,7 @@
     <div v-if="selectable" class="check" @click.stop="emit('toggle', question.id)">
       <van-icon
         :name="selected ? 'checked' : 'circle'"
-        :color="selected ? '#4f46e5' : '#cbd5e1'"
+        :color="selected ? '#16a34a' : '#cbd5e1'"
         size="21"
       />
     </div>
@@ -32,11 +32,7 @@
       </div>
 
       <div class="foot">
-        <span>{{ formatRelative(question.nextReviewAt) }}复习</span>
-        <span class="dot">·</span>
         <span>{{ formatDate(question.createdAt, 'MM-DD') }} 录入</span>
-        <span v-if="question.reviewCount" class="dot">·</span>
-        <span v-if="question.reviewCount">已复习 {{ question.reviewCount }} 次</span>
       </div>
     </div>
   </article>
@@ -48,7 +44,7 @@ import { questionTypeLabel, type WrongQuestion } from '@myos/shared';
 import RichText from './RichText.vue';
 import SubjectPill from './SubjectPill.vue';
 import MasteryBadge from './MasteryBadge.vue';
-import { formatDate, formatRelative } from '@/utils/format';
+import { formatDate } from '@/utils/format';
 
 const props = withDefaults(
   defineProps<{
@@ -168,9 +164,5 @@ function onClick(): void {
   margin-top: 10px;
   color: var(--muted);
   font-size: 10.5px;
-}
-
-.dot {
-  opacity: 0.5;
 }
 </style>

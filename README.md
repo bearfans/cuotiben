@@ -1,27 +1,28 @@
 # 错题本 · 家庭 AI 学习助手
 
-一款面向家庭的移动端 H5 错题本应用：拍照上传错题，调用视觉 AI 识别题目、答案与知识点，按孩子/年级/学科归档；配合间隔复习计划，并可从错题中筛选题目，一键生成 A4 打印试卷（含答案页）。
+一款面向家庭的移动端 H5 错题本应用：拍照上传错题，调用视觉 AI 识别题目、答案与知识点，按孩子/年级/学科归档；并可从错题中筛选题目，一键生成 A4 打印试卷（含答案页）。
 
 前后端分离，支持本地 Docker Compose 部署，也支持不使用 Docker 的本地开发模式。
 
 ## 界面预览
 
-| 首页 | 错题本 | 复习计划 |
-| --- | --- | --- |
-| <img src="docs/screenshots/home.png" width="240" /> | <img src="docs/screenshots/questions.png" width="240" /> | <img src="docs/screenshots/review.png" width="240" /> |
+| 首页 | 错题本 | 知识点 | 录入错题 |
+| --- | --- | --- | --- |
+| <img src="docs/screenshots/home.png" width="180" /> | <img src="docs/screenshots/questions.png" width="180" /> | <img src="docs/screenshots/knowledge.png" width="180" /> | <img src="docs/screenshots/upload.png" width="180" /> |
 
-| 知识点 | 错题组卷 | 试卷详情 |
-| --- | --- | --- |
-| <img src="docs/screenshots/knowledge.png" width="240" /> | <img src="docs/screenshots/papers.png" width="240" /> | <img src="docs/screenshots/paper-detail.png" width="240" /> |
+| 错题组卷 | 试卷详情 | 我的 | 登录 |
+| --- | --- | --- | --- |
+| <img src="docs/screenshots/papers.png" width="180" /> | <img src="docs/screenshots/paper-detail.png" width="180" /> | <img src="docs/screenshots/profile.png" width="180" /> | <img src="docs/screenshots/login.png" width="180" /> |
 
 ## 功能
 
 - **拍照 / 图片识别**：一次最多 9 张，AI 自动识别题干、选项、正确答案、孩子原答案、解析、错因、知识点和难度。
+- **双模式录题**：录题页可随时切换 AI 拍照识别与手动录入；手动模式支持完整填写题干、选项、答案、解析、知识点、难度和掌握度。
 - **识别结果确认**：保存前可逐题修正，支持只保存错题、批量全选、手动补录。
 - **多孩子档案**：一个家庭账号管理多个孩子，按年级和学期归档；年级切换后自动匹配可用学科。
 - **错题本**：按学科、题型、掌握度、知识点、关键词筛选；批量归档/删除；批量加入组卷。
+- **掌握度管理**：每道错题可标记 0–5 掌握度，用于筛选、薄弱知识点分析和组卷抽题。
 - **知识点**：AI 自动沉淀学科知识点标签；支持手动新增、重命名、合并重复标签；按薄弱指数排序展示。
-- **复习计划**：`1 / 2 / 4 / 7 / 15 / 30 / 60 / 90` 天间隔，按“没掌握 / 有点模糊 / 掌握了 / 很熟练”自评动态调整；今日任务、逾期任务、月历和复习记录。
 - **统计概览**：错题总数、已掌握、近 7 天新增、学科分布、录入趋势、薄弱知识点。
 - **错题组卷**：按学科、掌握度筛选，或从错题本勾选题目；支持随机抽题、标题与答案页设置。
 - **打印 / PDF**：服务端 Chromium 生成 A4 PDF；题目按选择题、判断题、填空题、解答题自动分组编号，答案与解析单独成页。
@@ -51,7 +52,6 @@ apps/
       common/          守卫、Prisma、异常过滤器、日期工具
       knowledge-points/知识点
       papers/          组卷、打印 HTML、PDF
-      review/          复习计划
       stats/           首页与知识点统计
       students/        孩子档案
       subjects/        学科
@@ -152,6 +152,26 @@ docker compose up -d --build
 
 访问 `http://服务器IP:8080`。
 
+### 局域网访问
+
+Compose 默认把 Web 端口绑定到 `0.0.0.0`，同一局域网的手机/电脑可直接访问。先查看运行 Docker 的机器 IP：
+
+```bash
+# macOS
+ipconfig getifaddr en0
+# Linux
+hostname -I
+```
+
+然后在其他设备打开 `http://<局域网IP>:8080`。如果无法访问，请检查：
+
+- `.env` 中 `WEB_HOST=0.0.0.0`（默认值）
+- Linux 防火墙放行端口：`sudo ufw allow 8080/tcp`
+- macOS 首次运行时允许 Docker 接受传入连接
+- 使用 HTTP 时保持 `COOKIE_SECURE=false`，只有 HTTPS 才改为 `true`
+
+前端请求走同源 `/api`，通常不需要额外配置。若确有跨域直连 API 的需求，再把 `WEB_URL`、`CORS_ORIGINS` 改成 `http://<局域网IP>:8080`。
+
 首次启动自动执行 `prisma migrate deploy`。如需演示数据：
 
 ```bash
@@ -203,20 +223,7 @@ AI_JSON_MODE=true
 - 图片会压缩到最长边 1600px 后以 base64 发送给模型；应用不会把图片上传到除你配置的 AI 服务之外的第三方。
 - **不要**把真实 Key 写入聊天、代码或 Git；只放在 `.env` 或部署平台密钥管理中。
 
-先用 `AI_PROVIDER=mock` 可以完整体验上传、识别确认、保存、复习和组卷流程。
-
-## 复习算法
-
-每次复习完成后按自评调整间隔：
-
-| 自评 | 下一次间隔 |
-| --- | --- |
-| 没掌握（AGAIN） | 1 天 |
-| 有点模糊（HARD） | 当前间隔 × 0.6（最少 1 天） |
-| 掌握了（GOOD） | 下一个标准间隔：1→2→4→7→15→30→60→90 |
-| 很熟练（EASY） | max(下一个标准间隔, 当前 × 2.5)，最多 180 天 |
-
-掌握度 0–5 会随自评增减，用于筛选和薄弱知识点排序。所有时间按 `TZ`（默认 `Asia/Shanghai`）计算，下次复习时间统一安排在早上 8 点。
+先用 `AI_PROVIDER=mock` 可以完整体验上传、识别确认、保存和组卷流程。
 
 ## 主要接口
 
@@ -231,8 +238,6 @@ AI_JSON_MODE=true
 | GET | `/api/v1/ai/jobs/:id` | 查询识别进度与结果 |
 | POST | `/api/v1/wrong-questions/batch` | 批量保存识别结果 |
 | GET | `/api/v1/wrong-questions` | 错题列表/筛选 |
-| GET | `/api/v1/review/today` | 今日复习任务 |
-| POST | `/api/v1/review/:id/complete` | 完成复习 |
 | GET | `/api/v1/stats/overview` | 首页统计 |
 | GET | `/api/v1/stats/knowledge` | 薄弱知识点 |
 | POST | `/api/v1/papers/candidates` | 组卷候选题目 |
@@ -277,7 +282,6 @@ pnpm --filter @myos/api test
 ## 已知限制
 
 - 组卷用于打印/PDF 练习，不提供在线作答和自动判分。
-- 复习提醒为应用内“今日任务”，未接入短信/推送。
 - PDF 依赖 Chromium；未安装时接口会返回 `503` 并提示。
 - AI 识别质量取决于图片清晰度和所选模型；保存前必须人工确认。
 - 当前版本面向单家庭/小规模自托管，未实现多租户隔离和对象存储生命周期策略。

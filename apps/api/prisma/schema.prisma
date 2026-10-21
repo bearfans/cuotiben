@@ -46,13 +46,6 @@ enum AiImageStatus {
   FAILED
 }
 
-enum ReviewRating {
-  AGAIN
-  HARD
-  GOOD
-  EASY
-}
-
 enum PaperStatus {
   READY
   GENERATING
@@ -84,7 +77,6 @@ model User {
   uploadFiles    UploadFile[]
   aiJobs         AiJob[]
   wrongQuestions WrongQuestion[]
-  reviewLogs     ReviewLog[]
   papers         Paper[]
 }
 
@@ -181,10 +173,6 @@ model WrongQuestion {
   source         QuestionSource @default(MANUAL)
   sourceJobId    String?        @db.Uuid
   note           String?        @db.Text
-  reviewCount    Int            @default(0)
-  intervalDays   Int            @default(1)
-  nextReviewAt   DateTime       @default(now())
-  lastReviewedAt DateTime?
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
   deletedAt      DateTime?
@@ -194,11 +182,9 @@ model WrongQuestion {
   subject         Subject                       @relation(fields: [subjectId], references: [id], onDelete: Restrict)
   knowledgePoints WrongQuestionKnowledgePoint[]
   images          QuestionImage[]
-  reviewLogs      ReviewLog[]
   paperItems      PaperItem[]
 
   @@index([userId, studentId, subjectId, status])
-  @@index([studentId, nextReviewAt])
   @@index([userId, createdAt])
   @@index([deletedAt])
 }
@@ -295,26 +281,6 @@ model AiJobImage {
 
   @@unique([jobId, uploadFileId])
   @@index([jobId])
-}
-
-model ReviewLog {
-  id              String       @id @default(uuid()) @db.Uuid
-  userId          String       @db.Uuid
-  wrongQuestionId String       @db.Uuid
-  rating          ReviewRating
-  scheduledAt     DateTime
-  completedAt     DateTime     @default(now())
-  intervalBefore  Int
-  intervalAfter   Int
-  masteryBefore   Int
-  masteryAfter    Int
-  createdAt       DateTime     @default(now())
-
-  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  wrongQuestion WrongQuestion @relation(fields: [wrongQuestionId], references: [id], onDelete: Cascade)
-
-  @@index([userId, completedAt])
-  @@index([wrongQuestionId, completedAt])
 }
 
 model Paper {

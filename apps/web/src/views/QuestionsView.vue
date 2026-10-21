@@ -1,8 +1,8 @@
 <template>
   <div>
-    <PageHeader title="错题本" :subtitle="`${total} 道错题 · 按掌握程度科学复习`" :back="false">
+    <PageHeader title="错题本" :subtitle="`${total} 道错题 · 按掌握程度筛选`" :back="false">
       <template #right>
-        <button type="button" class="header-add" @click="router.push('/questions/new')">
+        <button type="button" class="header-add" @click="router.push('/upload')">
           <van-icon name="plus" /> 录入
         </button>
       </template>
@@ -61,7 +61,7 @@
         <button type="button" class="batch-check" @click="toggleSelectAll">
           <van-icon
             :name="allPageSelected ? 'checked' : 'circle'"
-            :color="allPageSelected ? '#4f46e5' : '#cbd5e1'"
+            :color="allPageSelected ? '#16a34a' : '#cbd5e1'"
             size="20"
           />
           全选本页
@@ -109,7 +109,7 @@
         >
           <div class="empty-actions">
             <van-button round type="primary" size="small" @click="router.push('/upload')">
-              拍照录题
+              去录题
             </van-button>
             <van-button v-if="hasFilters" round plain size="small" @click="resetFilters">
               清除筛选
@@ -235,7 +235,6 @@ const knowledgePointName = ref('');
 
 const sortOptions = [
   { label: '最近录入', value: 'createdAt_desc' },
-  { label: '最久未复习', value: 'nextReviewAt_asc' },
   { label: '掌握度从低到高', value: 'mastery_asc' },
   { label: '难度从高到低', value: 'difficulty_desc' },
 ];
@@ -377,7 +376,7 @@ async function archiveSelected(): Promise<void> {
   try {
     await showConfirmDialog({
       title: '归档错题',
-      message: `归档后这些错题将不再出现在复习计划中，可随时恢复。`,
+      message: `归档后这些错题将不再出现在默认列表中，可随时恢复。`,
       confirmButtonText: '归档',
     });
     const ids = Array.from(selectedIds.value);
@@ -493,7 +492,7 @@ watch(
 }
 
 .filter-btn.active {
-  border-color: rgba(79, 70, 229, 0.35);
+  border-color: rgba(22, 163, 74, 0.35);
   color: var(--brand);
 }
 

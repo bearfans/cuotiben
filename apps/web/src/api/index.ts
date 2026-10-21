@@ -8,10 +8,6 @@ import type {
   PaperCandidate,
   PaperSettings,
   QuestionOption,
-  ReviewCalendar,
-  ReviewHistoryItem,
-  ReviewRating,
-  ReviewToday,
   Subject,
   UploadedFile,
   WrongQuestion,
@@ -95,21 +91,6 @@ export const aiApi = {
   getJob: (id: string) => api.get<AiJob>(`/ai/jobs/${id}`),
   retry: (id: string) => api.post<AiJob>(`/ai/jobs/${id}/retry`),
   quota: () => api.get<{ used: number; limit: number; remaining: number }>('/ai/quota'),
-};
-
-export const reviewApi = {
-  today: (studentId?: string) =>
-    api.get<ReviewToday>('/review/today', { params: studentId ? { studentId } : {} }),
-  complete: (id: string, rating: ReviewRating) =>
-    api.post<WrongQuestion>(`/review/${id}/complete`, { rating }),
-  snooze: (id: string, days = 1) =>
-    api.post<WrongQuestion>(`/review/${id}/snooze`, { days }),
-  calendar: (month: string, studentId?: string) =>
-    api.get<ReviewCalendar>('/review/calendar', {
-      params: { month, ...(studentId ? { studentId } : {}) },
-    }),
-  history: (params: { studentId?: string; page?: number; pageSize?: number }) =>
-    api.get<Paginated<ReviewHistoryItem>>('/review/history', { params }),
 };
 
 export const statsApi = {

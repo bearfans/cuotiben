@@ -173,7 +173,7 @@
         type="textarea"
         rows="1"
         autosize
-        placeholder="选填，记录复习提醒等"
+        placeholder="选填，记录错题背景等"
       />
     </div>
 

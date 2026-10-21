@@ -1,12 +1,10 @@
 import { test } from 'node:test';
 import { strict as assert } from 'node:assert';
-import dayjs from 'dayjs';
 import {
   escapeHtml,
   renderRichText,
   plainText,
   formatDate,
-  formatRelative,
   truncate,
   optionLabel,
 } from './format.ts';
@@ -89,20 +87,6 @@ test('formatDate formats with template', () => {
   assert.equal(formatDate('2026-10-21', 'YYYY/MM/DD'), '2026/10/21');
   assert.equal(formatDate('2026-10-21'), '2026-10-21');
   assert.equal(formatDate('2026-10-21T08:00:00', 'D日'), '21日');
-});
-
-test('formatRelative describes today/tomorrow/yesterday around now', () => {
-  const today = dayjs().startOf('day');
-  assert.equal(formatRelative(today.toISOString()), '今天');
-  assert.equal(formatRelative(today.add(1, 'day').toISOString()), '明天');
-  assert.equal(formatRelative(today.subtract(1, 'day').toISOString()), '昨天');
-  assert.equal(formatRelative(today.subtract(3, 'day').toISOString()), '逾期 3 天');
-  assert.equal(formatRelative(today.add(5, 'day').toISOString()), '5 天后');
-});
-
-test('formatRelative returns — for nullish input', () => {
-  assert.equal(formatRelative(null), '—');
-  assert.equal(formatRelative(undefined), '—');
 });
 
 test('truncate trims and appends ellipsis when over length', () => {

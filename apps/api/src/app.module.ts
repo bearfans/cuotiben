@@ -10,7 +10,6 @@ import configuration from './config/configuration';
 import { HealthModule } from './health/health.module';
 import { KnowledgePointsModule } from './knowledge-points/knowledge-points.module';
 import { PapersModule } from './papers/papers.module';
-import { ReviewModule } from './review/review.module';
 import { StatsModule } from './stats/stats.module';
 import { StudentsModule } from './students/students.module';
 import { SubjectsModule } from './subjects/subjects.module';
@@ -40,7 +39,6 @@ import { WrongQuestionsModule } from './wrong-questions/wrong-questions.module';
     UploadsModule,
     AiModule,
     WrongQuestionsModule,
-    ReviewModule,
     StatsModule,
     PapersModule,
   ],

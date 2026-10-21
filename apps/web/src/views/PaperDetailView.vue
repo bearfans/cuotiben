@@ -349,8 +349,8 @@ onMounted(load);
   height: 48px;
   flex: 0 0 auto;
   border-radius: 15px;
-  background: var(--teal-soft);
-  color: var(--teal);
+  background: var(--brand-soft);
+  color: var(--brand);
 }
 
 .hero-copy {
@@ -516,7 +516,7 @@ onMounted(load);
 
 .answer-label {
   flex: 0 0 auto;
-  color: var(--teal);
+  color: var(--brand-dark);
   font-size: 10px;
   font-weight: 700;
 }

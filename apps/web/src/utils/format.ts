@@ -59,19 +59,6 @@ export function formatDate(value?: string | null, template = 'YYYY-MM-DD'): stri
   return dayjs(value).format(template);
 }
 
-export function formatRelative(value?: string | null): string {
-  if (!value) return '—';
-  const target = dayjs(value);
-  const today = dayjs().startOf('day');
-  const diff = target.startOf('day').diff(today, 'day');
-  if (diff === 0) return '今天';
-  if (diff === 1) return '明天';
-  if (diff === -1) return '昨天';
-  if (diff < 0) return `逾期 ${Math.abs(diff)} 天`;
-  if (diff <= 7) return `${diff} 天后`;
-  return target.format('MM月DD日');
-}
-
 export function truncate(value: string, length = 60): string {
   const text = plainText(value);
   if (text.length <= length) return text;
