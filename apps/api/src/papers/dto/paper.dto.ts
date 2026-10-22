@@ -128,6 +128,13 @@ export class UpdatePaperDto {
   settings?: PaperSettingsDto;
 }
 
+export class UpdatePaperMasteryDto {
+  @IsInt()
+  @Min(0)
+  @Max(5)
+  mastery!: number;
+}
+
 export class PaperListQueryDto {
   @IsOptional()
   @IsUUID()

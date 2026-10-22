@@ -123,7 +123,7 @@ async function submit(): Promise<void> {
   try {
     if (mode.value === 'login') {
       await auth.login({ username: form.username.trim(), password: form.password });
-      showToast({ type: 'success', message: '欢迎回来' });
+      showToast({ type: 'success', icon: 'passed', message: '欢迎回来' });
     } else {
       await auth.register({
         username: form.username.trim(),
@@ -132,7 +132,7 @@ async function submit(): Promise<void> {
         studentName: form.studentName.trim() || undefined,
         grade: form.studentName.trim() ? form.grade : undefined,
       });
-      showToast({ type: 'success', message: '账号创建成功' });
+      showToast({ type: 'success', icon: 'passed', message: '账号创建成功' });
     }
     const requested = typeof route.query.redirect === 'string' ? route.query.redirect : '';
     const redirect = requested.startsWith('/') && !requested.startsWith('//') ? requested : '/home';

@@ -9,7 +9,10 @@
     >
       <template v-if="variant === 'card'">
         <span class="sc-body">
-          <span class="avatar avatar--lg">{{ initial }}</span>
+          <span class="avatar avatar--lg">
+            <van-icon v-if="!student" name="plus" size="18" />
+            <template v-else>{{ initial }}</template>
+          </span>
           <span class="info">
             <strong>{{ student?.name ?? '添加孩子' }}</strong>
             <small v-if="student">{{ gradeLabel(student.grade) }} · {{ semesterLabel(student.semester) }}</small>
@@ -19,7 +22,10 @@
         <van-icon name="arrow-down" size="16" class="sc-arrow" :class="{ rotated: open }" />
       </template>
       <template v-else>
-        <span class="avatar">{{ initial }}</span>
+        <span class="avatar">
+          <van-icon v-if="!student" name="plus" size="14" />
+          <template v-else>{{ initial }}</template>
+        </span>
         <span class="info">
           <strong>{{ student?.name ?? '添加孩子' }}</strong>
           <small v-if="student">{{ gradeLabel(student.grade) }} · {{ semesterLabel(student.semester) }}</small>
@@ -54,11 +60,11 @@
               <strong>{{ item.name }}</strong>
               <small>{{ gradeLabel(item.grade) }} · {{ semesterLabel(item.semester) }}</small>
             </span>
-            <van-icon v-if="item.id === currentStudentId" name="success" color="#16a34a" />
+            <van-icon v-if="item.id === currentStudentId" name="passed" color="#16a34a" />
           </button>
 
           <button type="button" class="student-option add-option" @click="add">
-            <span class="avatar add-avatar">＋</span>
+            <span class="avatar add-avatar"><van-icon name="plus" size="15" /></span>
             <span class="option-main">
               <strong>添加孩子</strong>
               <small>新建一份孩子档案</small>
@@ -98,7 +104,7 @@ const open = ref(false);
 const student = computed(() => studentStore.currentStudent);
 const students = computed(() => studentStore.students);
 const currentStudentId = computed(() => studentStore.currentStudentId);
-const initial = computed(() => student.value?.name.slice(0, 1) ?? '＋');
+const initial = computed(() => student.value?.name.slice(0, 1) ?? '');
 
 function toggle(): void {
   open.value = !open.value;

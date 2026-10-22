@@ -12,7 +12,7 @@
 
     <div v-else-if="draft" class="page edit-page">
       <div v-if="!studentStore.currentStudent" class="card panel">
-        <EmptyState emoji="🧒" title="请先添加孩子档案" description="错题需要归属到具体孩子">
+        <EmptyState icon="friends-o" title="请先添加孩子档案" description="错题需要归属到具体孩子">
           <van-button round type="primary" @click="router.push('/profile')">去添加</van-button>
         </EmptyState>
       </div>
@@ -42,7 +42,7 @@
     </div>
 
     <div v-else class="page">
-      <EmptyState emoji="🔍" title="错题不存在" description="它可能已被删除">
+      <EmptyState icon="search" title="错题不存在" description="它可能已被删除">
         <van-button round type="primary" @click="router.replace('/questions')">返回错题本</van-button>
       </EmptyState>
     </div>
@@ -119,7 +119,7 @@ async function save(): Promise<void> {
         String(route.params.id),
         draftToPayload(draft.value),
       );
-      showToast({ type: 'success', message: '修改已保存' });
+      showToast({ type: 'success', icon: 'passed', message: '修改已保存' });
       await router.replace(`/questions/${data.id}`);
     } else {
       const { data } = await questionsApi.create({
@@ -127,7 +127,7 @@ async function save(): Promise<void> {
         studentId: studentStore.currentStudentId,
         source: 'MANUAL',
       });
-      showToast({ type: 'success', message: '已保存到错题本' });
+      showToast({ type: 'success', icon: 'passed', message: '已保存到错题本' });
       await router.replace(`/questions/${data.id}`);
     }
   } catch (error) {

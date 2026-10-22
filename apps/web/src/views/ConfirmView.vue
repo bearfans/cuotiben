@@ -54,7 +54,7 @@
 
         <div v-if="job.status === 'FAILED'" class="card failed-card">
           <EmptyState
-            emoji="😵"
+            icon="warning-o"
             title="识别失败"
             :description="job.error || '图片可能不够清晰，请重试或重新上传'"
           >
@@ -85,7 +85,7 @@
             <div class="result-head">
               <button type="button" class="check-btn" @click="item.include = !item.include">
                 <van-icon
-                  :name="item.include ? 'checked' : 'circle'"
+                  :name="item.include ? 'passed' : 'circle'"
                   :color="item.include ? '#16a34a' : '#cbd5e1'"
                   size="22"
                 />
@@ -134,7 +134,7 @@
 
         <div v-else class="card empty-result">
           <EmptyState
-            emoji="🔍"
+            icon="search"
             title="没有识别出题目"
             description="可以手动添加，或换一张更清晰的图片重新识别"
           >
@@ -147,7 +147,7 @@
     <div v-if="items.length && job && job.status !== 'FAILED'" class="confirm-footer">
       <button type="button" class="footer-select" @click="toggleAll">
         <van-icon
-          :name="allSelected ? 'checked' : 'circle'"
+          :name="allSelected ? 'passed' : 'circle'"
           :color="allSelected ? '#16a34a' : '#cbd5e1'"
           size="20"
         />
@@ -467,7 +467,7 @@ async function save(): Promise<void> {
       ),
     });
     toast.close();
-    showToast({ type: 'success', message: `已保存 ${selected.length} 道错题` });
+    showToast({ type: 'success', icon: 'passed', message: `已保存 ${selected.length} 道错题` });
     await router.replace('/questions');
   } catch (error) {
     toast.close();

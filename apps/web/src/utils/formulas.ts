@@ -296,8 +296,52 @@ const arc: MathSymbol = {
   },
 };
 
+const segment: MathSymbol = {
+  id: 'segment',
+  name: '线段',
+  vars: [{ key: 'ab', label: '端点字母', placeholder: '如 AB' }],
+  defaults: { ab: 'AB' },
+  latex: (v) => `\\overline{${v.ab}}`,
+  match: (s) => {
+    const i = starts(s, '\\overline');
+    if (i < 0) return null;
+    const g = readGroupAt(s, i, '{');
+    if (!g || g[1] !== s.length) return null;
+    return { ab: val(g[0]) };
+  },
+};
+
+const vector: MathSymbol = {
+  id: 'vector',
+  name: '向量',
+  vars: [{ key: 'ab', label: '端点字母', placeholder: '如 AB' }],
+  defaults: { ab: 'AB' },
+  latex: (v) => `\\overrightarrow{${v.ab}}`,
+  match: (s) => {
+    const i = starts(s, '\\overrightarrow');
+    if (i < 0) return null;
+    const g = readGroupAt(s, i, '{');
+    if (!g || g[1] !== s.length) return null;
+    return { ab: val(g[0]) };
+  },
+};
+
 /** 带变量的符号；matchLatex 按此顺序尝试 */
-const VAR_SYMBOLS = [powerSub, ratio, fraction, sqrt, log, abs, sci, sum, arc, power, subscript];
+const VAR_SYMBOLS = [
+  powerSub,
+  ratio,
+  fraction,
+  sqrt,
+  log,
+  abs,
+  sci,
+  sum,
+  arc,
+  segment,
+  vector,
+  power,
+  subscript,
+];
 
 /* ============ 分类与全部符号 ============ */
 
@@ -317,8 +361,11 @@ export const SYMBOL_CATEGORIES: SymbolCategory[] = [
     symbols: [
       sym('times', '乘号 ×', '\\times'),
       sym('div', '除号 ÷', '\\div'),
+      sym('cdot', '点乘 ·', '\\cdot'),
       sym('pm', '正负号 ±', '\\pm'),
       sym('mp', '负正号 ∓', '\\mp'),
+      sym('lt', '小于 <', '\\lt'),
+      sym('gt', '大于 >', '\\gt'),
       sym('leq', '小于等于 ≤', '\\leq'),
       sym('geq', '大于等于 ≥', '\\geq'),
       sym('neq', '不等号 ≠', '\\neq'),
@@ -327,6 +374,8 @@ export const SYMBOL_CATEGORIES: SymbolCategory[] = [
       sym('propto', '成正比 ∝', '\\propto'),
       sym('because', '因为 ∵', '\\because'),
       sym('therefore', '所以 ∴', '\\therefore'),
+      sym('infty', '无穷 ∞', '\\infty'),
+      sym('percent', '百分号 %', '\\%'),
       sym('degree', '角度 °', '^{\\circ}'),
       sym('celsius', '摄氏度 ℃', '^{\\circ}\\mathrm{C}'),
     ],
@@ -334,7 +383,56 @@ export const SYMBOL_CATEGORIES: SymbolCategory[] = [
   {
     id: 'frac',
     name: '分式与乘方',
-    symbols: [fraction, ratio, power, subscript, powerSub, sqrt, abs, log, sum],
+    symbols: [fraction, ratio, power, subscript, powerSub, sqrt, abs, log, sci, sum],
+  },
+  {
+    id: 'units',
+    name: '单位',
+    symbols: [
+      sym('mm', '毫米', '\\mathrm{mm}'),
+      sym('cm', '厘米', '\\mathrm{cm}'),
+      sym('dm', '分米', '\\mathrm{dm}'),
+      sym('m', '米', '\\mathrm{m}'),
+      sym('km', '千米', '\\mathrm{km}'),
+      sym('cm2', '平方厘米', '\\mathrm{cm^2}'),
+      sym('dm2', '平方分米', '\\mathrm{dm^2}'),
+      sym('m2', '平方米', '\\mathrm{m^2}'),
+      sym('km2', '平方千米', '\\mathrm{km^2}'),
+      sym('hm2', '公顷', '\\mathrm{hm^2}'),
+      sym('cm3', '立方厘米', '\\mathrm{cm^3}'),
+      sym('dm3', '立方分米', '\\mathrm{dm^3}'),
+      sym('m3', '立方米', '\\mathrm{m^3}'),
+      sym('liter', '升', '\\mathrm{L}'),
+      sym('milliliter', '毫升', '\\mathrm{mL}'),
+      sym('mg', '毫克', '\\mathrm{mg}'),
+      sym('g', '克', '\\mathrm{g}'),
+      sym('kg', '千克', '\\mathrm{kg}'),
+      sym('ton', '吨', '\\mathrm{t}'),
+      sym('s', '秒', '\\mathrm{s}'),
+      sym('min', '分钟', '\\mathrm{min}'),
+      sym('h', '小时', '\\mathrm{h}'),
+      sym('ms', '米/秒', '\\mathrm{m/s}'),
+      sym('kmh', '千米/时', '\\mathrm{km/h}'),
+      sym('kgm3', '千克/立方米', '\\mathrm{kg/m^3}'),
+      sym('gcm3', '克/立方厘米', '\\mathrm{g/cm^3}'),
+      sym('newton', '牛顿', '\\mathrm{N}'),
+      sym('newtonkg', '牛/千克', '\\mathrm{N/kg}'),
+      sym('Pa', '帕斯卡', '\\mathrm{Pa}'),
+      sym('kPa', '千帕', '\\mathrm{kPa}'),
+      sym('joule', '焦耳', '\\mathrm{J}'),
+      sym('kwh', '千瓦时', '\\mathrm{kW \\cdot h}'),
+      sym('watt', '瓦特', '\\mathrm{W}'),
+      sym('kilowatt', '千瓦', '\\mathrm{kW}'),
+      sym('ampere', '安培', '\\mathrm{A}'),
+      sym('mA', '毫安', '\\mathrm{mA}'),
+      sym('volt', '伏特', '\\mathrm{V}'),
+      sym('mV', '毫伏', '\\mathrm{mV}'),
+      sym('ohm', '欧姆', '\\Omega'),
+      sym('kohm', '千欧', '\\mathrm{k\\Omega}'),
+      sym('coulomb', '库仑', '\\mathrm{C}'),
+      sym('Hz', '赫兹', '\\mathrm{Hz}'),
+      sym('rad', '弧度', '\\mathrm{rad}'),
+    ],
   },
   {
     id: 'geometry',
@@ -342,11 +440,14 @@ export const SYMBOL_CATEGORIES: SymbolCategory[] = [
     symbols: [
       sym('angle', '角 ∠', '\\angle'),
       sym('triangle', '三角形 △', '\\triangle'),
+      sym('square', '正方形 □', '\\square'),
+      sym('circle', '圆 ⊙', '\\odot'),
+      segment,
+      vector,
       sym('parallel', '平行 ∥', '\\parallel'),
       sym('perp', '垂直 ⊥', '\\perp'),
       sym('similar', '相似 ∽', '\\backsim'),
       sym('congruent', '全等 ≌', '\\cong'),
-      sym('circle', '圆 ⊙', '\\odot'),
       arc,
     ],
   },
@@ -356,8 +457,10 @@ export const SYMBOL_CATEGORIES: SymbolCategory[] = [
     symbols: [
       sym('in', '属于 ∈', '\\in'),
       sym('notin', '不属于 ∉', '\\notin'),
-      sym('subset', '子集 ⊂', '\\subset'),
-      sym('subseteq', '真子集 ⊆', '\\subseteq'),
+      sym('subset', '真子集 ⊂', '\\subset'),
+      sym('subseteq', '子集 ⊆', '\\subseteq'),
+      sym('supset', '真包含 ⊃', '\\supset'),
+      sym('supseteq', '包含 ⊇', '\\supseteq'),
       sym('union', '并集 ∪', '\\cup'),
       sym('intersect', '交集 ∩', '\\cap'),
       sym('emptyset', '空集 ∅', '\\varnothing'),
@@ -365,6 +468,12 @@ export const SYMBOL_CATEGORIES: SymbolCategory[] = [
       sym('natural', '自然数集 ℕ', '\\mathbb{N}'),
       sym('integer', '整数集 ℤ', '\\mathbb{Z}'),
       sym('rational', '有理数集 ℚ', '\\mathbb{Q}'),
+      sym('complex', '复数集 ℂ', '\\mathbb{C}'),
+      sym('forall', '任意 ∀', '\\forall'),
+      sym('exists', '存在 ∃', '\\exists'),
+      sym('land', '且 ∧', '\\land'),
+      sym('lor', '或 ∨', '\\lor'),
+      sym('neg', '非 ¬', '\\neg'),
       sym('implies', '推出 ⇒', '\\Rightarrow'),
       sym('iff', '等价 ⇔', '\\Leftrightarrow'),
     ],
@@ -378,39 +487,21 @@ export const SYMBOL_CATEGORIES: SymbolCategory[] = [
       sym('gamma', 'γ', '\\gamma'),
       sym('delta', 'δ', '\\delta'),
       sym('epsilon', 'ε', '\\varepsilon'),
+      sym('eta', 'η', '\\eta'),
       sym('theta', 'θ', '\\theta'),
       sym('lambda', 'λ', '\\lambda'),
       sym('mu', 'μ', '\\mu'),
       sym('nu', 'ν', '\\nu'),
+      sym('pi', 'π', '\\pi'),
       sym('rho', 'ρ', '\\rho'),
       sym('sigma', 'σ', '\\sigma'),
       sym('tau', 'τ', '\\tau'),
       sym('varphi', 'φ', '\\varphi'),
       sym('omega', 'ω', '\\omega'),
       sym('Delta', 'Δ', '\\Delta'),
+      sym('Sigma', 'Σ', '\\Sigma'),
+      sym('Phi', 'Φ', '\\Phi'),
       sym('Omega', 'Ω', '\\Omega'),
-      sym('pi', 'π', '\\pi'),
-    ],
-  },
-  {
-    id: 'physics',
-    name: '物理单位',
-    symbols: [
-      sci,
-      sym('ms', '米/秒', '\\mathrm{m/s}'),
-      sym('ms2', '米/秒²', '\\mathrm{m/s^2}'),
-      sym('kgm3', '千克/立方米', '\\mathrm{kg/m^3}'),
-      sym('gcm3', '克/立方厘米', '\\mathrm{g/cm^3}'),
-      sym('Nm', '牛·米', '\\mathrm{N \\cdot m}'),
-      sym('Pa', '帕斯卡', '\\mathrm{Pa}'),
-      sym('Hz', '赫兹', '\\mathrm{Hz}'),
-      sym('newton', '牛顿', '\\mathrm{N}'),
-      sym('joule', '焦耳', '\\mathrm{J}'),
-      sym('watt', '瓦特', '\\mathrm{W}'),
-      sym('volt', '伏特', '\\mathrm{V}'),
-      sym('ampere', '安培', '\\mathrm{A}'),
-      sym('ohm', '欧姆', '\\Omega'),
-      sym('kwh', '千瓦时', '\\mathrm{kW \\cdot h}'),
     ],
   },
 ];

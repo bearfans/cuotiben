@@ -13,7 +13,12 @@
     />
 
     <!-- 符号选择面板 -->
-    <van-popup v-model:show="showPanel" position="bottom" round>
+    <van-popup
+      v-model:show="showPanel"
+      position="bottom"
+      round
+      :style="{ height: '60vh' }"
+    >
       <div class="symbol-panel">
         <div class="panel-head">
           <h3>插入符号</h3>
@@ -415,6 +420,20 @@ onBeforeUnmount(() => {
   padding: 16px 16px calc(18px + var(--safe-bottom));
 }
 
+.symbol-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.symbol-panel .panel-head,
+.symbol-panel .panel-tip,
+.symbol-panel .cat-row {
+  flex: 0 0 auto;
+}
+
 .panel-head {
   display: flex;
   align-items: center;
@@ -472,14 +491,31 @@ onBeforeUnmount(() => {
 
 .symbol-grid {
   display: grid;
+  flex: 1 1 auto;
   grid-template-columns: repeat(3, 1fr);
+  align-content: start;
   gap: 8px;
-  max-height: 46vh;
+  min-height: 0;
   overflow-y: auto;
-  scrollbar-width: none;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 116, 139, 0.35) transparent;
 }
 
-.symbol-grid::-webkit-scrollbar,
+.symbol-grid::-webkit-scrollbar {
+  width: 5px;
+}
+
+.symbol-grid::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.symbol-grid::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(100, 116, 139, 0.35);
+}
+
 .cat-row::-webkit-scrollbar {
   display: none;
 }

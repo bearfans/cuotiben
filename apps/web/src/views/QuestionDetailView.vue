@@ -55,9 +55,24 @@
         </div>
       </div>
 
+      <div class="card mastery-card">
+        <div class="mastery-head">
+          <div class="mastery-copy">
+            <strong>掌握程度</strong>
+            <span>点击下方标签更新这道错题</span>
+          </div>
+          <MasteryBadge :value="question.mastery" />
+        </div>
+        <MasteryPicker
+          :model-value="question.mastery"
+          :disabled="savingMastery"
+          @select="updateMastery"
+        />
+      </div>
+
       <div class="card answer-card">
         <div class="answer-row correct">
-          <span class="answer-label"><van-icon name="success" /> 正确答案</span>
+          <span class="answer-label"><van-icon name="passed" /> 正确答案</span>
           <RichText :text="question.correctAnswer || '暂无答案'" />
         </div>
         <div v-if="question.studentAnswer" class="answer-row wrong">
@@ -104,7 +119,7 @@
     </div>
 
     <div v-else class="page">
-      <EmptyState emoji="🔍" title="错题不存在" description="它可能已被删除">
+      <EmptyState icon="search" title="错题不存在" description="它可能已被删除">
         <van-button round type="primary" @click="router.replace('/questions')">返回错题本</van-button>
       </EmptyState>
     </div>
@@ -127,6 +142,7 @@ import PageHeader from '@/components/PageHeader.vue';
 import RichText from '@/components/RichText.vue';
 import SubjectPill from '@/components/SubjectPill.vue';
 import MasteryBadge from '@/components/MasteryBadge.vue';
+import MasteryPicker from '@/components/MasteryPicker.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import { formatDate } from '@/utils/format';
 
@@ -136,6 +152,7 @@ const paperSelection = usePaperSelectionStore();
 
 const question = ref<WrongQuestion | null>(null);
 const loading = ref(true);
+const savingMastery = ref(false);
 
 async function load(): Promise<void> {
   loading.value = true;
@@ -160,6 +177,23 @@ async function addToPaper(): Promise<void> {
   paperSelection.set(merged);
   showToast('已加入组卷');
   await router.push('/papers/new');
+}
+
+async function updateMastery(value: number): Promise<void> {
+  if (!question.value || question.value.mastery === value || savingMastery.value) return;
+  const previous = question.value.mastery;
+  question.value.mastery = value;
+  savingMastery.value = true;
+  try {
+    const { data } = await questionsApi.update(question.value.id, { mastery: value });
+    question.value = data;
+    showToast({ type: 'success', icon: 'passed', message: '掌握程度已更新' });
+  } catch (error) {
+    question.value.mastery = previous;
+    showToast(errorMessage(error));
+  } finally {
+    savingMastery.value = false;
+  }
 }
 
 async function removeQuestion(): Promise<void> {
@@ -203,6 +237,35 @@ onMounted(load);
 
 .question-main {
   padding: 16px;
+}
+
+.mastery-card {
+  padding: 14px 16px;
+}
+
+.mastery-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.mastery-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.mastery-copy strong {
+  color: var(--text-2);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.mastery-copy span {
+  color: var(--muted);
+  font-size: 10.5px;
 }
 
 .meta-row {

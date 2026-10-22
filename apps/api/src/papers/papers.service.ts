@@ -283,6 +283,33 @@ export class PapersService {
     return this.get(userId, id);
   }
 
+  async updateMastery(
+    userId: string,
+    id: string,
+    mastery: number,
+  ): Promise<{ updated: number }> {
+    const paper = await this.prisma.paper.findFirst({
+      where: { id, userId, deletedAt: null },
+      select: { items: { select: { wrongQuestionId: true } } },
+    });
+    if (!paper) throw new NotFoundException('试卷不存在');
+
+    const questionIds = Array.from(
+      new Set(
+        paper.items
+          .map((item) => item.wrongQuestionId)
+          .filter((questionId): questionId is string => Boolean(questionId)),
+      ),
+    );
+    if (!questionIds.length) return { updated: 0 };
+
+    const result = await this.prisma.wrongQuestion.updateMany({
+      where: { userId, id: { in: questionIds }, deletedAt: null },
+      data: { mastery },
+    });
+    return { updated: result.count };
+  }
+
   async remove(userId: string, id: string): Promise<{ success: boolean }> {
     const existing = await this.prisma.paper.findFirst({ where: { id, userId, deletedAt: null } });
     if (!existing) throw new NotFoundException('试卷不存在');

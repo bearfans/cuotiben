@@ -38,7 +38,7 @@
         </div>
 
         <div class="hero-actions">
-          <van-button round type="primary" icon="printer" @click="printPaper">打印 / 预览</van-button>
+          <van-button round type="primary" icon="newspaper-o" @click="printPaper">打印 / 预览</van-button>
           <van-button round plain icon="down" :loading="downloading" @click="downloadPdf">
             下载 PDF
           </van-button>
@@ -47,6 +47,26 @@
           <van-icon name="info-o" />
           PDF 由服务器排版生成，首次下载可能需要几秒
         </p>
+      </div>
+
+      <div class="mastery-batch card">
+        <div class="mastery-batch-icon">
+          <van-icon name="edit" size="18" />
+        </div>
+        <div class="mastery-batch-copy">
+          <strong>统一掌握程度</strong>
+          <span>一次调整本试卷全部 {{ paper.questionCount }} 道题</span>
+        </div>
+        <van-button
+          size="small"
+          round
+          plain
+          type="primary"
+          :disabled="!paper.items?.length"
+          @click="openBulkMastery"
+        >
+          设置
+        </van-button>
       </div>
 
       <div class="content-head">
@@ -60,10 +80,19 @@
       <div v-if="paper.items?.length" class="paper-content">
         <section v-for="group in groups" :key="group.section" class="section-block">
           <h3 class="section-name">{{ group.label }}</h3>
-          <article v-for="item in group.items" :key="item.id" class="paper-question card">
+          <article
+            v-for="item in group.items"
+            :key="item.id"
+            class="paper-question card"
+            role="button"
+            tabindex="0"
+            @click="openQuestion(item.snapshot.questionId)"
+            @keyup.enter="openQuestion(item.snapshot.questionId)"
+          >
             <div class="q-head">
               <span class="q-number">{{ item.number }}.</span>
               <span class="q-type">{{ questionTypeLabel(item.snapshot.questionType) }}</span>
+              <van-icon name="arrow" class="q-open" />
             </div>
             <div class="q-stem">
               <RichText :text="item.snapshot.stem" />
@@ -81,7 +110,7 @@
                 :src="image.url"
                 fit="cover"
                 radius="8"
-                @click="previewImage(item.snapshot.images, image.url ?? '')"
+                @click.stop="previewImage(item.snapshot.images, image.url ?? '')"
               />
             </div>
 
@@ -113,7 +142,7 @@
       </div>
 
       <div v-else class="card panel">
-        <EmptyState emoji="📄" title="试卷暂无题目" description="试卷数据可能已损坏，请重新生成" />
+        <EmptyState icon="description-o" title="试卷暂无题目" description="试卷数据可能已损坏，请重新生成" />
       </div>
 
       <div class="detail-foot">
@@ -124,7 +153,7 @@
     </div>
 
     <div v-else class="page">
-      <EmptyState emoji="🔍" title="试卷不存在" description="它可能已被删除">
+      <EmptyState icon="search" title="试卷不存在" description="它可能已被删除">
         <van-button round type="primary" @click="router.replace('/papers')">返回试卷列表</van-button>
       </EmptyState>
     </div>
@@ -135,6 +164,28 @@
         <van-field v-model="renameTitle" maxlength="80" placeholder="输入试卷标题" />
         <van-button block round type="primary" :loading="renaming" @click="renamePaper">
           保存
+        </van-button>
+      </div>
+    </van-popup>
+
+    <van-popup v-model:show="showMastery" position="bottom" round>
+      <div class="mastery-sheet">
+        <h3>统一掌握程度</h3>
+        <p>将这份试卷中的 {{ paper?.questionCount ?? 0 }} 道题统一设为：</p>
+        <MasteryPicker
+          :model-value="bulkMastery ?? -1"
+          :disabled="updatingMastery"
+          @select="selectBulkMastery"
+        />
+        <van-button
+          block
+          round
+          type="primary"
+          :disabled="bulkMastery === null"
+          :loading="updatingMastery"
+          @click="applyBulkMastery"
+        >
+          应用到全部题目
         </van-button>
       </div>
     </van-popup>
@@ -162,6 +213,7 @@ import { papersApi } from '@/api';
 import { errorMessage } from '@/api/client';
 import PageHeader from '@/components/PageHeader.vue';
 import RichText from '@/components/RichText.vue';
+import MasteryPicker from '@/components/MasteryPicker.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import { formatDate } from '@/utils/format';
 
@@ -175,6 +227,9 @@ const downloading = ref(false);
 const showRename = ref(false);
 const renameTitle = ref('');
 const renaming = ref(false);
+const showMastery = ref(false);
+const bulkMastery = ref<number | null>(null);
+const updatingMastery = ref(false);
 
 interface GroupItem extends PaperItem {
   number: number;
@@ -256,7 +311,7 @@ async function downloadPdf(): Promise<void> {
     URL.revokeObjectURL(url);
     paper.value.hasPdf = true;
     toast.close();
-    showToast({ type: 'success', message: 'PDF 已下载' });
+    showToast({ type: 'success', icon: 'passed', message: 'PDF 已下载' });
   } catch (error) {
     toast.close();
     showToast(errorMessage(error));
@@ -292,6 +347,37 @@ async function renamePaper(): Promise<void> {
     showToast(errorMessage(error));
   } finally {
     renaming.value = false;
+  }
+}
+
+function openQuestion(questionId: string): void {
+  void router.push(`/questions/${questionId}`);
+}
+
+function openBulkMastery(): void {
+  bulkMastery.value = null;
+  showMastery.value = true;
+}
+
+function selectBulkMastery(value: number): void {
+  bulkMastery.value = value;
+}
+
+async function applyBulkMastery(): Promise<void> {
+  if (!paper.value || bulkMastery.value === null) return;
+  updatingMastery.value = true;
+  try {
+    const { data } = await papersApi.updateMastery(paper.value.id, bulkMastery.value);
+    showMastery.value = false;
+    showToast({
+      type: 'success',
+      icon: 'passed',
+      message: data.updated ? `已更新 ${data.updated} 道题` : '没有可更新的题目',
+    });
+  } catch (error) {
+    showToast(errorMessage(error));
+  } finally {
+    updatingMastery.value = false;
   }
 }
 
@@ -408,6 +494,48 @@ onMounted(load);
   font-size: 9.5px;
 }
 
+.mastery-batch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 12px 14px;
+}
+
+.mastery-batch-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  border-radius: 11px;
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.mastery-batch-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.mastery-batch-copy strong {
+  display: block;
+  color: var(--text);
+  font-size: 12.5px;
+}
+
+.mastery-batch-copy span {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.mastery-batch :deep(.van-button) {
+  flex: 0 0 auto;
+  font-size: 11px;
+}
+
 .content-head {
   display: flex;
   align-items: center;
@@ -437,6 +565,19 @@ onMounted(load);
 .paper-question {
   padding: 14px;
   margin-bottom: 8px;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.paper-question:active {
+  transform: scale(0.995);
+}
+
+.paper-question:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
 }
 
 .q-head {
@@ -455,6 +596,12 @@ onMounted(load);
 .q-type {
   color: var(--muted);
   font-size: 10px;
+}
+
+.q-open {
+  margin-left: auto;
+  color: #cbd5e1;
+  font-size: 14px;
 }
 
 .q-stem {
@@ -553,5 +700,24 @@ onMounted(load);
   border: 1px solid var(--line);
   border-radius: 10px;
   background: var(--surface-soft);
+}
+
+.mastery-sheet {
+  padding: 18px 18px calc(18px + var(--safe-bottom));
+}
+
+.mastery-sheet h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.mastery-sheet p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.mastery-sheet :deep(.mastery-options) {
+  margin: 16px 0 20px;
 }
 </style>

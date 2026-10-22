@@ -1,6 +1,6 @@
 <template>
   <div>
-    <PageHeader title="错题组卷" subtitle="从错题本生成可打印的练习试卷" :back="false">
+    <PageHeader title="创错题试卷" subtitle="从错题本生成可打印的练习试卷" :back="false">
       <template #right>
         <button type="button" class="header-add" @click="router.push('/papers/new')">
           <van-icon name="plus" /> 新建
@@ -31,7 +31,7 @@
       </div>
 
       <div v-if="paperSelection.count" class="selection-banner card" @click="router.push('/papers/new')">
-        <van-icon name="checked" color="#16a34a" size="18" />
+        <van-icon name="passed" color="#16a34a" size="18" />
         <span>已从错题本选择 <b>{{ paperSelection.count }}</b> 道题</span>
         <van-icon name="arrow" color="#94a3b8" />
       </div>
@@ -75,7 +75,7 @@
 
         <div v-if="!papers.length" class="card empty-card">
           <EmptyState
-            emoji="📄"
+            icon="description-o"
             title="还没有生成过试卷"
             description="从错题中挑几道题，生成一张专属练习卷，打印出来练一练"
           >

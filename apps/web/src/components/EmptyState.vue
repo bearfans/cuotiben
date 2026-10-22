@@ -1,6 +1,8 @@
 <template>
   <div class="empty-wrap">
-    <span class="empty-emoji">{{ emoji }}</span>
+    <span class="empty-icon" aria-hidden="true">
+      <van-icon :name="icon" size="24" />
+    </span>
     <p class="empty-title">{{ title }}</p>
     <p v-if="description" class="empty-desc">{{ description }}</p>
     <slot />
@@ -12,13 +14,24 @@ withDefaults(
   defineProps<{
     title: string;
     description?: string;
-    emoji?: string;
+    icon?: string;
   }>(),
-  { emoji: '🌱' },
+  { icon: 'notes-o' },
 );
 </script>
 
 <style scoped>
+.empty-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 11px;
+  border-radius: 15px;
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
 .empty-title {
   margin: 0;
   color: var(--text-2);

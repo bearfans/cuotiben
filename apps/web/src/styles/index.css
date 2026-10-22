@@ -292,12 +292,6 @@ a {
   color: var(--muted);
 }
 
-.empty-emoji {
-  display: block;
-  margin-bottom: 8px;
-  font-size: 40px;
-}
-
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.18s ease;

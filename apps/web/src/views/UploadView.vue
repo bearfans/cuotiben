@@ -5,7 +5,7 @@
     <div class="page upload-page">
       <div v-if="!studentStore.currentStudent" class="card panel">
         <EmptyState
-          emoji="🧒"
+          icon="friends-o"
           title="先添加孩子档案"
           description="录入结果需要按年级和学科归档"
         >
@@ -22,7 +22,7 @@
             :aria-pressed="mode === 'ai'"
             @click="setMode('ai')"
           >
-            <span class="mode-icon"><van-icon name="photograph" size="21" /></span>
+            <span class="mode-icon"><van-icon name="photo-o" size="21" /></span>
             <span class="mode-copy">
               <strong>AI 识别</strong>
               <small>拍照自动录入</small>
@@ -90,7 +90,7 @@
                 :class="{ centered: !fileList.length }"
               >
                 <div class="upload-trigger">
-                  <span class="upload-icon"><van-icon name="photograph" size="34" /></span>
+                  <span class="upload-icon"><van-icon name="photo-o" size="34" /></span>
                 </div>
               </van-uploader>
               <div class="upload-tip">
@@ -336,7 +336,7 @@ async function saveManual(): Promise<void> {
       studentId: studentStore.currentStudentId,
       source: 'MANUAL',
     });
-    showToast({ type: 'success', message: '已保存到错题本' });
+    showToast({ type: 'success', icon: 'passed', message: '已保存到错题本' });
     await router.replace(`/questions/${data.id}`);
   } catch (error) {
     showToast(errorMessage(error));

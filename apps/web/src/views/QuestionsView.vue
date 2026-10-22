@@ -1,6 +1,6 @@
 <template>
   <div>
-    <PageHeader title="错题本" :subtitle="`${total} 道错题 · 按掌握程度筛选`" :back="false">
+    <PageHeader title="错题" :subtitle="`${total} 道错题 · 按掌握程度筛选`" :back="false">
       <template #right>
         <button type="button" class="header-add" @click="router.push('/upload')">
           <van-icon name="plus" /> 录入
@@ -60,7 +60,7 @@
       <div v-if="manageMode" class="batch-bar card">
         <button type="button" class="batch-check" @click="toggleSelectAll">
           <van-icon
-            :name="allPageSelected ? 'checked' : 'circle'"
+            :name="allPageSelected ? 'passed' : 'circle'"
             :color="allPageSelected ? '#16a34a' : '#cbd5e1'"
             size="20"
           />
@@ -103,7 +103,7 @@
 
       <div v-if="!loading && !items.length" class="card empty-card">
         <EmptyState
-          emoji="📖"
+          icon="search"
           title="没有找到错题"
           :description="hasFilters ? '试试调整筛选条件，或搜索其他关键词' : '拍照识别或手动录入第一道错题吧'"
         >

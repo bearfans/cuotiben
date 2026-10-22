@@ -16,7 +16,7 @@
           <p class="overview-hint">继续整理，让薄弱点越来越清晰</p>
         </div>
         <button type="button" class="overview-action" @click="router.push('/upload')">
-          <van-icon name="photograph" size="24" />
+          <van-icon name="photo-o" size="24" />
           <span>录题</span>
         </button>
       </div>
@@ -81,7 +81,7 @@
             </div>
             <EmptyState
               v-else
-              emoji="📚"
+              icon="notes-o"
               title="还没有错题"
               description="拍照识别或手动录入，开始建立专属错题本"
             >
@@ -154,13 +154,13 @@
             @open="router.push(`/questions/${question.id}`)"
           />
           <div v-if="!recent.length" class="card panel">
-            <EmptyState emoji="✏️" title="最近还没有录入" description="拍照或手动添加一道错题吧" />
+            <EmptyState icon="edit" title="最近还没有录入" description="拍照或手动添加一道错题吧" />
           </div>
         </section>
       </template>
 
       <section v-else class="section welcome-card card">
-        <span class="welcome-emoji">👋</span>
+        <span class="welcome-icon" aria-hidden="true"><van-icon name="smile-o" size="32" /></span>
         <h2>欢迎使用错题本</h2>
         <p>先建立孩子档案，AI 才能按年级和学科整理错题。</p>
         <van-button round type="primary" @click="router.push('/profile')">添加孩子档案</van-button>
@@ -560,8 +560,14 @@ watch(() => studentStore.currentStudentId, load);
   text-align: center;
 }
 
-.welcome-emoji {
-  font-size: 44px;
+.welcome-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 19px;
+  background: var(--brand-soft);
+  color: var(--brand);
 }
 
 .welcome-card h2 {

@@ -70,7 +70,7 @@
             </div>
             <div v-else class="card empty-card">
               <EmptyState
-                emoji="🌿"
+                icon="bulb-o"
                 title="暂无薄弱知识点"
                 :description="subjectId ? '该学科还没有错题数据' : '录入错题并标注知识点后，这里会自动分析薄弱环节'"
               />
@@ -141,7 +141,7 @@
             </div>
             <div v-else class="card empty-card">
               <EmptyState
-                emoji="🏷️"
+                icon="label-o"
                 title="还没有知识点"
                 description="识别错题时 AI 会自动生成，也可以手动添加"
               >
@@ -188,7 +188,7 @@
             <span>{{ point.name }}</span>
             <span class="muted small">{{ point.usageCount }} 题</span>
             <van-icon
-              :name="mergeTargetId === point.id ? 'success' : 'circle'"
+              :name="mergeTargetId === point.id ? 'passed' : 'circle'"
               :color="mergeTargetId === point.id ? '#16a34a' : '#cbd5e1'"
             />
           </button>

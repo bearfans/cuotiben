@@ -146,6 +146,8 @@ export const papersApi = {
   get: (id: string) => api.get<Paper>(`/papers/${id}`),
   update: (id: string, payload: { title?: string; settings?: Partial<PaperSettings> }) =>
     api.patch<Paper>(`/papers/${id}`, payload),
+  updateMastery: (id: string, mastery: number) =>
+    api.patch<{ updated: number }>(`/papers/${id}/mastery`, { mastery }),
   remove: (id: string) => api.delete<{ success: boolean }>(`/papers/${id}`),
   printToken: (id: string) =>
     api.get<{ token: string; expiresAt: string; url: string; pdfUrl: string }>(

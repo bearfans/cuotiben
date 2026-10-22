@@ -4,7 +4,7 @@
 
     <div v-if="!studentStore.currentStudent" class="page">
       <div class="card panel">
-        <EmptyState emoji="🧒" title="请先添加孩子档案" description="试卷需要归属到具体孩子">
+        <EmptyState icon="friends-o" title="请先添加孩子档案" description="试卷需要归属到具体孩子">
           <van-button round type="primary" @click="router.push('/profile')">去添加</van-button>
         </EmptyState>
       </div>
@@ -13,7 +13,7 @@
     <template v-else>
       <div class="page create-body">
         <div v-if="paperSelection.count && usingPreselection" class="preselection card">
-          <van-icon name="checked" color="#16a34a" />
+          <van-icon name="passed" color="#16a34a" />
           <span>已从错题本带入 <b>{{ paperSelection.count }}</b> 道题</span>
           <button type="button" @click="loadAllCandidates">加载更多错题</button>
         </div>
@@ -84,7 +84,7 @@
           </div>
           <button type="button" class="select-all" @click="toggleSelectAll">
             <van-icon
-              :name="allSelected ? 'checked' : 'circle'"
+              :name="allSelected ? 'passed' : 'circle'"
               :color="allSelected ? '#16a34a' : '#cbd5e1'"
               size="19"
             />
@@ -108,7 +108,7 @@
           >
             <div class="candidate-check">
               <van-icon
-                :name="selectedIds.has(candidate.id) ? 'checked' : 'circle'"
+                :name="selectedIds.has(candidate.id) ? 'passed' : 'circle'"
                 :color="selectedIds.has(candidate.id) ? '#16a34a' : '#cbd5e1'"
                 size="21"
               />
@@ -130,7 +130,7 @@
 
           <div v-if="!candidates.length" class="card panel">
             <EmptyState
-              emoji="🗂️"
+              icon="records-o"
               title="没有符合条件的错题"
               description="调整筛选条件，或先去错题本录入更多题目"
             >
@@ -365,7 +365,7 @@ async function createPaper(): Promise<void> {
     });
     paperSelection.clear();
     toast.close();
-    showToast({ type: 'success', message: '试卷已生成' });
+    showToast({ type: 'success', icon: 'passed', message: '试卷已生成' });
     await router.replace(`/papers/${data.id}`);
   } catch (error) {
     toast.close();

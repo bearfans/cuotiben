@@ -20,6 +20,7 @@ import {
   PaperListQueryDto,
   SelectCandidatesDto,
   UpdatePaperDto,
+  UpdatePaperMasteryDto,
 } from './dto/paper.dto';
 import { PapersService } from './papers.service';
 
@@ -52,6 +53,15 @@ export class PapersController {
   @Get(':id')
   get(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.papersService.get(user.id, id);
+  }
+
+  @Patch(':id/mastery')
+  updateMastery(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() dto: UpdatePaperMasteryDto,
+  ) {
+    return this.papersService.updateMastery(user.id, id, dto.mastery);
   }
 
   @Patch(':id')
