@@ -8,19 +8,33 @@
   --amber-soft: #fef3c7;
   --rose: #e11d48;
   --rose-soft: #ffe4e6;
-  --bg: #f3f8f3;
+  --bg: #eef3ee;
   --surface: #ffffff;
   --surface-soft: #f6faf6;
   --text: #0f172a;
   --text-2: #475569;
   --muted: #94a3b8;
   --line: #e2ede4;
-  --radius-lg: 22px;
-  --radius: 16px;
-  --radius-sm: 11px;
-  --shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
-  --shadow-soft: 0 4px 16px rgba(15, 23, 42, 0.04);
+  /* iOS Liquid Glass: 更大的圆角，更柔和的分层阴影 */
+  --radius-lg: 28px;
+  --radius: 20px;
+  --radius-sm: 14px;
+  --shadow: 0 18px 40px -12px rgba(15, 23, 42, 0.14), 0 4px 12px -4px rgba(15, 23, 42, 0.06);
+  --shadow-soft: 0 8px 24px -8px rgba(15, 23, 42, 0.1), 0 2px 6px -2px rgba(15, 23, 42, 0.04);
+  --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+  /* === Liquid Glass 材质 token === */
+  /* 普通材质：半透明白 + 高饱和模糊 + 顶部内高光发丝边 */
+  --glass-bg: rgba(255, 255, 255, 0.66);
+  --glass-bg-strong: rgba(255, 255, 255, 0.82);
+  --glass-bg-clear: rgba(255, 255, 255, 0.32);
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --glass-border-soft: rgba(255, 255, 255, 0.45);
+  --glass-highlight: inset 0 1px 0.5px rgba(255, 255, 255, 0.9);
+  --glass-shadow: 0 12px 32px -8px rgba(15, 23, 42, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  --glass-blur: 22px;
+  --glass-saturate: 180%;
 
   --van-primary-color: var(--brand);
   --van-success-color: var(--brand);
@@ -32,15 +46,41 @@
   --van-background: var(--bg);
   --van-background-2: var(--surface);
   --van-border-color: var(--line);
-  --van-radius-md: 12px;
+  --van-radius-md: 14px;
   --van-cell-group-inset-padding: 0;
   --van-field-label-color: var(--text-2);
   --van-tabbar-item-active-color: var(--brand);
   --van-tabbar-height: 58px;
-  --van-dialog-radius: 20px;
-  --van-popup-round-radius: 22px;
+  --van-dialog-radius: 24px;
+  --van-popup-round-radius: 28px;
   --van-button-primary-background: var(--brand);
   --van-button-primary-border-color: var(--brand);
+  --van-button-radius: 14px;
+}
+
+/* === Liquid Glass 工具类 === */
+.glass {
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.glass--strong {
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.glass--clear {
+  background: var(--glass-bg-clear);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: 1px solid var(--glass-border-soft);
+  box-shadow: var(--glass-highlight);
 }
 
 * {
@@ -83,8 +123,11 @@ a {
   max-width: 600px;
   min-height: 100vh;
   margin: 0 auto;
-  background: var(--bg);
-  box-shadow: 0 0 50px rgba(15, 23, 42, 0.08);
+  background:
+    radial-gradient(circle at 0% 0%, rgba(22, 163, 74, 0.06), transparent 42%),
+    radial-gradient(circle at 100% 12%, rgba(13, 148, 136, 0.05), transparent 38%),
+    var(--bg);
+  box-shadow: 0 0 60px rgba(15, 23, 42, 0.1);
 }
 
 .app-main {
@@ -107,7 +150,10 @@ a {
 .card {
   background: var(--surface);
   border-radius: var(--radius);
-  box-shadow: var(--shadow-soft);
+  border: 1px solid rgba(15, 23, 42, 0.03);
+  box-shadow:
+    var(--shadow-soft),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .section {
@@ -297,6 +343,16 @@ a {
   height: 48px;
 }
 
+/* 主按钮：纵向高光渐变 + 顶部内高光，质感更接近 iOS 实心胶囊 */
+.van-button--primary {
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0) 60%);
+  box-shadow: 0 8px 18px -6px rgba(22, 163, 74, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.van-button--primary:active {
+  background-image: linear-gradient(180deg, rgba(0, 0, 0, 0.06) 0%, rgba(0, 0, 0, 0) 60%);
+}
+
 .van-cell {
   background: transparent;
 }
@@ -318,30 +374,63 @@ a {
 }
 
 .van-tabbar {
-  /* Vant 对 fixed tabbar 使用 left: 0，桌面端需要手动居中到 600px 应用容器下方 */
+  /* 仍贴底、居中 600px、保留原 footprint，避免与各页底部操作栏（z-index 层叠）冲突 */
   right: auto;
   left: 50%;
   width: 100%;
   max-width: 600px;
   margin: 0 auto;
   transform: translateX(-50%);
-  border-top: 1px solid rgba(219, 234, 222, 0.8);
-  box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.04);
+  /* Liquid Glass 材质：去掉硬 border-top，改为顶部内高光 + 顶部圆角 + 柔和上阴影 */
+  border-top: 0;
+  border-radius: 26px 26px 0 0;
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  box-shadow:
+    0 -10px 30px -8px rgba(15, 23, 42, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
 }
 
 .van-tabbar-item {
+  position: relative;
   font-size: 11px;
 }
 
 .van-tabbar-item__icon {
   font-size: 22px;
   margin-bottom: 2px;
+  position: relative;
+  z-index: 1;
+}
+
+.van-tabbar-item__text {
+  position: relative;
+  z-index: 1;
+}
+
+/* 激活态：柔和绿色胶囊高亮，质感更接近 iOS */
+.van-tabbar-item--active::before {
+  content: '';
+  position: absolute;
+  left: 24%;
+  right: 24%;
+  top: 5px;
+  bottom: 5px;
+  border-radius: 16px;
+  background: var(--brand-soft);
+  box-shadow: inset 0 0 0 1px rgba(22, 163, 74, 0.12);
+  z-index: 0;
 }
 
 .van-popup--bottom {
   max-width: 600px;
   left: 50%;
   transform: translateX(-50%);
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 -8px 40px rgba(15, 23, 42, 0.18);
 }
 
 .van-overlay {

@@ -8,6 +8,7 @@ export interface AiRecognitionInput {
   grade: number;
   semester: string;
   subjectHint?: string | null;
+  isStitched?: boolean;
 }
 
 export interface AiRecognitionOutput {

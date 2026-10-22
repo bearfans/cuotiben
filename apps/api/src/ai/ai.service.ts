@@ -24,6 +24,7 @@ import { UploadsService } from '../uploads/uploads.service';
 import { AiQueueService } from './ai-queue.service';
 import { AI_PROVIDER, type AiProvider } from './ai.types';
 import { CreateAiJobDto } from './dto/create-ai-job.dto';
+import { stitchImagesVertically } from './image-stitch';
 
 @Injectable()
 export class AiService {
@@ -101,73 +102,107 @@ export class AiService {
     const errors: string[] = [];
 
     try {
+      if (!job.images.length) throw new Error('任务中没有图片');
+
+      // 标记所有图片进入处理中
+      await this.prisma.aiJobImage.updateMany({
+        where: { jobId },
+        data: { status: 'PROCESSING', error: null },
+      });
+
+      // 按上传顺序读取全部原图
+      const buffers: Buffer[] = [];
       for (const image of job.images) {
-        if (image.status === 'SUCCEEDED' && image.result) continue;
-        await this.prisma.aiJobImage.update({
-          where: { id: image.id },
-          data: { status: 'PROCESSING', error: null },
-        });
-
-        try {
-          const { buffer } = await this.uploads.getBufferForUser(image.uploadFileId, job.userId);
-          const output = await this.provider.recognize({
-            image: buffer,
-            mimeType: image.uploadFile.mimeType,
-            grade: job.grade,
-            semester: job.semester,
-            subjectHint: job.subjectHint,
-          });
-          const normalized = this.normalizePayloadSubject(output.payload, job.subjectHint);
-          const confidence =
-            normalized.questions.length > 0
-              ? normalized.questions.reduce((sum, question) => sum + question.confidence, 0) /
-                normalized.questions.length
-              : null;
-          tokensIn += output.tokensIn;
-          tokensOut += output.tokensOut;
-
-          await this.prisma.aiJobImage.update({
-            where: { id: image.id },
-            data: {
-              status: 'SUCCEEDED',
-              result: normalized as unknown as Prisma.InputJsonValue,
-              rawResponse: output.raw as Prisma.InputJsonValue,
-              confidence,
-              error: null,
-            },
-          });
-        } catch (error) {
-          const message = (error as Error).message || '识别失败';
-          errors.push(message);
-          await this.prisma.aiJobImage.update({
-            where: { id: image.id },
-            data: { status: 'FAILED', error: message.slice(0, 1000) },
-          });
-        }
+        const { buffer } = await this.uploads.getBufferForUser(image.uploadFileId, job.userId);
+        buffers.push(buffer);
       }
 
-      const images = await this.prisma.aiJobImage.findMany({ where: { jobId } });
-      const succeeded = images.filter((image) => image.status === 'SUCCEEDED').length;
-      const status =
-        succeeded === images.length ? 'SUCCEEDED' : succeeded > 0 ? 'PARTIAL' : 'FAILED';
+      // 多张图片先竖向拼接成一张长图（一道题可能跨页），再一次性交给 AI 识别
+      const isStitched = buffers.length > 1;
+      const stitched = isStitched
+        ? await stitchImagesVertically(buffers, {
+            targetWidth: this.config.get<number>('ai.maxImageEdge') ?? 1600,
+            maxHeight: this.config.get<number>('ai.stitchMaxHeight') ?? 6000,
+          })
+        : { buffer: buffers[0], width: 0, height: 0, pageCount: 1 };
+
+      const output = await this.provider.recognize({
+        image: stitched.buffer,
+        mimeType: isStitched ? 'image/jpeg' : job.images[0].uploadFile.mimeType,
+        isStitched,
+        grade: job.grade,
+        semester: job.semester,
+        subjectHint: job.subjectHint,
+      });
+      const normalized = this.normalizePayloadSubject(output.payload, job.subjectHint);
+      const confidence =
+        normalized.questions.length > 0
+          ? normalized.questions.reduce((sum, question) => sum + question.confidence, 0) /
+            normalized.questions.length
+          : null;
+      tokensIn += output.tokensIn;
+      tokensOut += output.tokensOut;
+
+      // 识别成功后，把拼接长图保存为第一张图片的原图。
+      // 确认错题时 sourceImageIds 指向第一张图片，因此最终只保存这一张长图。
+      // 放在识别成功之后写入，避免失败重试时读到已拼接的图而重复拼接。
+      if (isStitched) {
+        await this.uploads.replaceWithStitchedImage(
+          job.images[0].uploadFileId,
+          job.userId,
+          stitched.buffer,
+          stitched.width,
+          stitched.height,
+        );
+      }
+
+      // 识别结果包含长图中的所有题目，挂在第一张图片的记录上，
+      // 其余图片仅作为拍摄凭证展示
+      await this.prisma.aiJobImage.updateMany({
+        where: { jobId },
+        data: {
+          status: 'SUCCEEDED',
+          result: Prisma.JsonNull,
+          rawResponse: Prisma.JsonNull,
+          confidence: null,
+          error: null,
+        },
+      });
+      await this.prisma.aiJobImage.update({
+        where: { id: job.images[0].id },
+        data: {
+          status: 'SUCCEEDED',
+          result: normalized as unknown as Prisma.InputJsonValue,
+          rawResponse: output.raw as Prisma.InputJsonValue,
+          confidence,
+          error: null,
+        },
+      });
+
       await this.prisma.aiJob.update({
         where: { id: jobId },
         data: {
-          status,
+          status: 'SUCCEEDED',
           tokensIn,
           tokensOut,
           finishedAt: new Date(),
-          error: errors.length ? errors.slice(0, 3).join('；').slice(0, 2000) : null,
+          error: null,
         },
       });
     } catch (error) {
-      this.logger.error(`AI job ${jobId} crashed: ${(error as Error).message}`);
+      const message = (error as Error).message || '识别失败';
+      errors.push(message);
+      this.logger.error(`AI job ${jobId} failed: ${message}`);
+      await this.prisma.aiJobImage.updateMany({
+        where: { jobId },
+        data: { status: 'FAILED', error: message.slice(0, 1000) },
+      });
       await this.prisma.aiJob.update({
         where: { id: jobId },
         data: {
           status: 'FAILED',
           finishedAt: new Date(),
-          error: (error as Error).message.slice(0, 2000),
+          error: errors.slice(0, 3).join('；').slice(0, 2000),
         },
       });
     }

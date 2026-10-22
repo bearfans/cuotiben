@@ -1,6 +1,6 @@
 import { QUESTION_TYPES, SUBJECTS, SUBJECT_MAP, gradeLabel, semesterLabel } from '@myos/shared';
 
-export const SYSTEM_PROMPT = `你是一名严谨的中国 K12 错题整理助手。你会收到一张作业、试卷或练习册的照片，需要把图片中的题目结构化，并判断哪些是错题。
+export const SYSTEM_PROMPT = `你是一名严谨的中国 K12 错题整理助手。你会收到一张作业、试卷或练习册的照片（可能是多张图片拼接成的长图），需要把图片中的题目结构化，并判断哪些是错题。
 
 要求：
 1. 只输出一个 JSON 对象，不要输出 Markdown 代码块、解释或多余文字。
@@ -45,5 +45,5 @@ export function buildUserPrompt(input: {
   const subject = input.subjectHint
     ? `，用户提示学科为「${SUBJECT_MAP[input.subjectHint]?.name ?? input.subjectHint}」`
     : '';
-  return `请识别这张图片。学生年级：${gradeLabel(input.grade)}，学期：${semesterLabel(input.semester)}${subject}。请按系统要求输出 JSON。`;
+  return `请识别这张图片（可能是多张图片拼接成的长图）。学生年级：${gradeLabel(input.grade)}，学期：${semesterLabel(input.semester)}${subject}。请按系统要求输出 JSON。`;
 }

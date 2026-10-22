@@ -13,47 +13,7 @@
       </div>
 
       <section class="section">
-        <div class="section-head">
-          <h2 class="section-title">孩子档案</h2>
-          <button type="button" class="add-student" @click="openAdd">
-            <van-icon name="plus" /> 添加
-          </button>
-        </div>
-
-        <div class="student-list">
-          <article
-            v-for="student in studentStore.students"
-            :key="student.id"
-            class="student-card card"
-            :class="{ active: student.id === studentStore.currentStudentId }"
-          >
-            <span class="student-avatar">
-              {{ student.name.slice(0, 1) }}
-            </span>
-            <div class="student-main">
-              <div class="student-name">
-                <strong>{{ student.name }}</strong>
-                <span v-if="student.id === studentStore.currentStudentId" class="current-tag">当前</span>
-              </div>
-              <p>{{ gradeLabel(student.grade) }} · {{ semesterLabel(student.semester) }}</p>
-            </div>
-            <div class="student-actions">
-              <button type="button" @click="selectStudent(student.id)">切换</button>
-              <button type="button" class="muted-btn" @click="openEdit(student)">
-                <van-icon name="edit" />
-              </button>
-              <button type="button" class="muted-btn" @click="archiveStudent(student)">
-                <van-icon name="delete-o" />
-              </button>
-            </div>
-          </article>
-
-          <button v-if="!studentStore.students.length" type="button" class="add-student-card" @click="openAdd">
-            <van-icon name="plus" size="22" />
-            <span>添加孩子档案</span>
-            <small>按年级和学期整理错题</small>
-          </button>
-        </div>
+        <StudentSwitcher variant="card" @add="openAdd" />
       </section>
 
       <section v-if="quota" class="section">
@@ -181,8 +141,6 @@ import { showConfirmDialog, showToast } from 'vant';
 import {
   GRADES,
   SEMESTERS,
-  gradeLabel,
-  semesterLabel,
   type Grade,
   type Semester,
   type Student,
@@ -193,6 +151,7 @@ import { errorMessage } from '@/api/client';
 import { useAuthStore } from '@/stores/auth';
 import { useStudentStore } from '@/stores/student';
 import PageHeader from '@/components/PageHeader.vue';
+import StudentSwitcher from '@/components/StudentSwitcher.vue';
 
 const router = useRouter();
 const auth = useAuthStore();
@@ -220,24 +179,11 @@ async function loadQuota(): Promise<void> {
   }
 }
 
-function selectStudent(id: string): void {
-  studentStore.selectStudent(id);
-  showToast('已切换孩子');
-}
-
 function openAdd(): void {
   editingStudent.value = null;
   studentForm.name = '';
   studentForm.grade = studentStore.currentStudent?.grade ?? 3;
   studentForm.semester = (studentStore.currentStudent?.semester ?? 'FIRST') as Semester;
-  showStudentPopup.value = true;
-}
-
-function openEdit(student: Student): void {
-  editingStudent.value = student;
-  studentForm.name = student.name;
-  studentForm.grade = student.grade;
-  studentForm.semester = student.semester;
   showStudentPopup.value = true;
 }
 
@@ -270,22 +216,6 @@ async function saveStudent(): Promise<void> {
     showToast(errorMessage(error));
   } finally {
     saving.value = false;
-  }
-}
-
-async function archiveStudent(student: Student): Promise<void> {
-  try {
-    await showConfirmDialog({
-      title: '归档孩子档案',
-      message: `归档「${student.name}」后，将不再出现在切换列表中，历史错题会保留。`,
-      confirmButtonText: '归档',
-      confirmButtonColor: '#e11d48',
-    });
-    await studentsApi.archive(student.id);
-    await auth.loadStudents();
-    showToast('已归档');
-  } catch (error) {
-    if (error !== 'cancel') showToast(errorMessage(error));
   }
 }
 

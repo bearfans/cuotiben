@@ -5,7 +5,6 @@
         <van-icon name="notes-o" size="30" />
       </div>
       <h1>错题本</h1>
-      <p>把每一次错误，变成下一次进步</p>
       <div class="hero-tags">
         <span>AI 拍照识别</span>
         <span>知识点归纳</span>
@@ -83,11 +82,6 @@
         </van-button>
         <p class="agreement">登录即表示你同意妥善保管家庭学习数据</p>
       </div>
-
-      <button v-if="mode === 'login'" type="button" class="demo-hint" @click="fillDemo">
-        演示账号：demo / demo12345
-        <span>一键填入</span>
-      </button>
     </div>
 
     <p class="footer">专注错题整理 · 让学习更有方向</p>
@@ -115,11 +109,6 @@ const form = reactive({
   studentName: '',
   grade: 3,
 });
-
-function fillDemo(): void {
-  form.username = 'demo';
-  form.password = 'demo12345';
-}
 
 async function submit(): Promise<void> {
   if (!form.username.trim() || !form.password) {
@@ -193,13 +182,6 @@ async function submit(): Promise<void> {
   font-size: 30px;
   font-weight: 800;
   letter-spacing: 3px;
-}
-
-.hero p {
-  margin: 8px 0 0;
-  color: var(--text-2);
-  font-size: 13.5px;
-  letter-spacing: 0.4px;
 }
 
 .hero-tags {
@@ -300,24 +282,6 @@ async function submit(): Promise<void> {
   color: var(--muted);
   font-size: 10.5px;
   text-align: center;
-}
-
-.demo-hint {
-  display: block;
-  width: calc(100% - 40px);
-  margin: 12px auto 0;
-  padding: 9px;
-  border: 1px dashed rgba(22, 163, 74, 0.25);
-  border-radius: 10px;
-  background: var(--brand-soft);
-  color: var(--text-2);
-  font-size: 11.5px;
-}
-
-.demo-hint span {
-  margin-left: 6px;
-  color: var(--brand);
-  font-weight: 700;
 }
 
 .footer {

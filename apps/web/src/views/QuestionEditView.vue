@@ -20,7 +20,7 @@
       <template v-else>
         <div class="tip-card">
           <van-icon name="bulb-o" />
-          <span>题干和解析支持 LaTeX，例如输入 <code>$x^2+1$</code> 会显示为公式。</span>
+          <span>点击「插入符号」选择常用数学/物理符号；插入后点击符号即可修改变量，公式直接显示最终效果。</span>
         </div>
 
         <QuestionForm :draft="draft" :subjects="studentStore.subjects" />

@@ -46,7 +46,7 @@ export function emptyDraft(
     analysis: '',
     errorReason: '',
     note: '',
-    difficulty: 3,
+    difficulty: 4,
     mastery: 0,
     knowledgePoints: [],
   };

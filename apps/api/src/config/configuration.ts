@@ -55,6 +55,7 @@ export default () => {
       dailyJobLimit: int(process.env.AI_DAILY_JOB_LIMIT, 50),
       promptVersion: process.env.AI_PROMPT_VERSION ?? 'v1',
       maxImageEdge: int(process.env.AI_MAX_IMAGE_EDGE, 1600),
+      stitchMaxHeight: int(process.env.AI_STITCH_MAX_HEIGHT, 6000),
     },
     queue: {
       enabled: bool(process.env.QUEUE_ENABLED, false),

@@ -1,15 +1,16 @@
 <template>
   <div class="question-form">
     <div class="form-card card">
-      <van-field
+      <div class="block-head">
+        <span>题目</span>
+        <button type="button" class="symbol-btn" @click="openSymbols">
+          <van-icon name="add-o" /> 插入符号
+        </button>
+      </div>
+      <RichEditor
+        ref="stemEditor"
         v-model="draft.stem"
-        type="textarea"
-        rows="3"
-        autosize
-        label="题目"
-        label-align="top"
-        placeholder="输入或粘贴题目内容，支持 $LaTeX$ 公式"
-        maxlength="30000"
+        placeholder="输入题目内容，公式将直接显示最终效果"
       />
     </div>
 
@@ -28,20 +29,6 @@
         readonly
         is-link
         @click="showType = true"
-      />
-      <van-field
-        label="年级"
-        :model-value="gradeLabel(draft.grade)"
-        readonly
-        is-link
-        @click="showGrade = true"
-      />
-      <van-field
-        label="学期"
-        :model-value="semesterLabel(draft.semester)"
-        readonly
-        is-link
-        @click="showSemester = true"
       />
     </div>
 
@@ -80,33 +67,30 @@
         autosize
         placeholder="选择题可填 A / AB，解答题填写完整答案"
       />
-      <van-field
-        v-model="draft.studentAnswer"
-        label="孩子原答案"
-        label-align="top"
-        type="textarea"
-        rows="1"
-        autosize
-        placeholder="选填，记录当时的错误答案"
-      />
-      <van-field
-        v-model="draft.errorReason"
-        label="错因"
-        label-align="top"
-        type="textarea"
-        rows="1"
-        autosize
-        placeholder="选填，例如：单位换算错误、审题不清"
-      />
-      <van-field
-        v-model="draft.analysis"
-        label="解析"
-        label-align="top"
-        type="textarea"
-        rows="2"
-        autosize
-        placeholder="选填，支持 LaTeX 公式"
-      />
+
+      <div class="error-block">
+        <div class="error-head">
+          <span class="rate-label">错因</span>
+          <span class="muted tiny">可多选</span>
+        </div>
+        <div class="error-chips">
+          <button
+            v-for="reason in COMMON_ERROR_REASONS"
+            :key="reason"
+            type="button"
+            class="error-chip"
+            :class="{ active: selectedReasons.includes(reason) }"
+            @click="toggleReason(reason)"
+          >
+            {{ reason }}
+          </button>
+        </div>
+        <van-field
+          v-model="customReason"
+          placeholder="其他错因，点击输入"
+          @update:model-value="syncErrorReason"
+        />
+      </div>
     </div>
 
     <div class="form-card card">
@@ -144,7 +128,7 @@
     <div class="form-card card">
       <div class="rate-row">
         <span class="rate-label">难度</span>
-        <van-stepper v-model="draft.difficulty" :min="1" :max="5" integer />
+        <van-rate v-model="draft.difficulty" :size="22" color="#f59e0b" void-color="#dde3e9" />
       </div>
       <div class="mastery-block">
         <span class="rate-label">掌握程度</span>
@@ -193,41 +177,22 @@
         @cancel="showType = false"
       />
     </van-popup>
-    <van-popup v-model:show="showGrade" position="bottom" round>
-      <van-picker
-        :columns="gradeColumns"
-        title="选择年级"
-        @confirm="onGradeConfirm"
-        @cancel="showGrade = false"
-      />
-    </van-popup>
-    <van-popup v-model:show="showSemester" position="bottom" round>
-      <van-picker
-        :columns="semesterColumns"
-        title="选择学期"
-        @confirm="onSemesterConfirm"
-        @cancel="showSemester = false"
-      />
-    </van-popup>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import type { PickerConfirmEventParams, PickerOption } from 'vant';
 import {
   MASTERY_COLORS,
   MASTERY_LABELS,
   QUESTION_TYPES,
-  SEMESTERS,
-  gradeLabel,
   questionTypeLabel,
-  semesterLabel,
   type QuestionType,
   type Subject,
 } from '@myos/shared';
 import type { QuestionDraft } from '@/types/question';
-import { GRADE_OPTIONS } from '@/types/question';
+import RichEditor from '@/components/RichEditor.vue';
 
 const props = defineProps<{
   draft: QuestionDraft;
@@ -236,9 +201,65 @@ const props = defineProps<{
 
 const showSubject = ref(false);
 const showType = ref(false);
-const showGrade = ref(false);
-const showSemester = ref(false);
 const knowledgeInput = ref('');
+const stemEditor = ref<InstanceType<typeof RichEditor> | null>(null);
+
+/** 常见错因，供快速多选 */
+const COMMON_ERROR_REASONS = [
+  '审题不清',
+  '概念混淆',
+  '公式用错',
+  '计算失误',
+  '抄写错误',
+  '单位换算错误',
+  '步骤遗漏',
+  '方法没掌握',
+  '粗心大意',
+  '时间不够',
+];
+
+const selectedReasons = ref<string[]>([]);
+const customReason = ref('');
+
+/** 把 draft.errorReason 拆回「已选常见错因 + 自定义输入」 */
+function parseErrorReason(value: string): void {
+  const parts = value
+    .split(/[、，,；;\s]+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  selectedReasons.value = parts.filter((part) => COMMON_ERROR_REASONS.includes(part));
+  customReason.value = parts
+    .filter((part) => !COMMON_ERROR_REASONS.includes(part))
+    .join('、');
+}
+
+/** 合并已选错因与自定义输入，写回 draft.errorReason */
+function syncErrorReason(): void {
+  const parts = [...selectedReasons.value];
+  const custom = customReason.value.trim();
+  if (custom) parts.push(custom);
+  props.draft.errorReason = parts.join('、');
+}
+
+function toggleReason(reason: string): void {
+  const index = selectedReasons.value.indexOf(reason);
+  if (index >= 0) selectedReasons.value.splice(index, 1);
+  else selectedReasons.value.push(reason);
+  syncErrorReason();
+}
+
+watch(customReason, syncErrorReason);
+
+// 草稿被外部替换（如打开另一题编辑）时重新解析错因；挂载时立即解析一次
+watch(
+  () => props.draft,
+  (draft) => parseErrorReason(draft?.errorReason ?? ''),
+  { immediate: true },
+);
+
+function openSymbols(): void {
+  stemEditor.value?.openSymbols();
+}
 
 const isChoice = computed(
   () =>
@@ -259,16 +280,6 @@ const typeColumns: PickerOption[] = QUESTION_TYPES.map((type) => ({
   value: type.value,
 }));
 
-const gradeColumns: PickerOption[] = GRADE_OPTIONS.map((grade) => ({
-  text: grade.text,
-  value: grade.value,
-}));
-
-const semesterColumns: PickerOption[] = SEMESTERS.map((semester) => ({
-  text: semester.label,
-  value: semester.value,
-}));
-
 function onSubjectConfirm(event: PickerConfirmEventParams): void {
   props.draft.subjectId = String(event.selectedValues[0] ?? '');
   showSubject.value = false;
@@ -277,16 +288,6 @@ function onSubjectConfirm(event: PickerConfirmEventParams): void {
 function onTypeConfirm(event: PickerConfirmEventParams): void {
   props.draft.questionType = String(event.selectedValues[0] ?? 'OTHER') as QuestionType;
   showType.value = false;
-}
-
-function onGradeConfirm(event: PickerConfirmEventParams): void {
-  props.draft.grade = Number(event.selectedValues[0] ?? 1);
-  showGrade.value = false;
-}
-
-function onSemesterConfirm(event: PickerConfirmEventParams): void {
-  props.draft.semester = String(event.selectedValues[0] ?? 'FIRST') as QuestionDraft['semester'];
-  showSemester.value = false;
 }
 
 function addOption(): void {
@@ -355,6 +356,19 @@ function removeKnowledgePoint(value: string): void {
   font-weight: 600;
 }
 
+.symbol-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 5px 10px;
+  border: 1px dashed #bbf7d0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--brand);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
 .option-row {
   display: flex;
   align-items: center;
@@ -407,10 +421,22 @@ function removeKnowledgePoint(value: string): void {
 }
 
 .kp-input :deep(.van-field) {
+  flex: 1;
+  min-width: 0;
   padding: 8px 10px;
   border: 1px solid var(--line);
   border-radius: 10px;
   background: var(--surface-soft);
+}
+
+/* 输入框内的原生 input 有较大固有宽度，需放开限制避免挤压按钮 */
+.kp-input :deep(.van-field__control) {
+  min-width: 0;
+}
+
+.kp-input :deep(.van-button) {
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .rate-row {
@@ -449,5 +475,47 @@ function removeKnowledgePoint(value: string): void {
 .mastery-chip.active {
   border-color: currentColor;
   font-weight: 700;
+}
+
+.error-block {
+  padding: 12px 16px 4px;
+}
+
+.error-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.error-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.error-chip {
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-2);
+  font-size: 11.5px;
+  transition: all 0.15s ease;
+}
+
+.error-chip.active {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+  color: var(--brand);
+  font-weight: 600;
+}
+
+.error-block :deep(.van-field) {
+  margin-bottom: 8px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-soft);
 }
 </style>

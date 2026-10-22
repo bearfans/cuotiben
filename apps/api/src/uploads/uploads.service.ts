@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { UploadFile } from '@prisma/client';
-import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
+import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
 import sharp from 'sharp';
 import type { UploadedFile } from '@myos/shared';
 import { PrismaService } from '../common/prisma/prisma.service';
@@ -103,6 +103,52 @@ export class UploadsService {
 
   async putGenerated(key: string, buffer: Buffer, contentType: string): Promise<void> {
     await this.storage.put(key, buffer, contentType);
+  }
+
+  /**
+   * 用拼接后的长图替换某张图片的存储内容。
+   * 先写新文件、再切换数据库指向，失败时旧原图仍然可用。
+   */
+  async replaceWithStitchedImage(
+    fileId: string,
+    userId: string,
+    buffer: Buffer,
+    width: number,
+    height: number,
+  ): Promise<void> {
+    const file = await this.getOwned(fileId, userId);
+
+    const thumbnail = await sharp(buffer)
+      .resize({ width: 480, height: 480, fit: 'inside', withoutEnlargement: true })
+      .jpeg({ quality: 78 })
+      .toBuffer();
+
+    const baseKey = file.storageKey.replace(/\.[^./]+$/, '');
+    const key = `${baseKey}-stitched-${randomUUID()}.jpg`;
+    const thumbnailKey = key.replace(/\.jpg$/, '.thumb.jpg');
+    await this.storage.put(key, buffer, 'image/jpeg');
+    await this.storage.put(thumbnailKey, thumbnail, 'image/jpeg');
+
+    await this.prisma.uploadFile.update({
+      where: { id: file.id },
+      data: {
+        storageKey: key,
+        thumbnailKey,
+        mimeType: 'image/jpeg',
+        size: buffer.length,
+        width,
+        height,
+        sha256: createHash('sha256').update(buffer).digest('hex'),
+      },
+    });
+
+    // 旧文件清理失败不影响主流程
+    try {
+      await this.storage.delete(file.storageKey);
+      if (file.thumbnailKey) await this.storage.delete(file.thumbnailKey);
+    } catch {
+      // ignore
+    }
   }
 
   async deleteByKey(key: string): Promise<void> {

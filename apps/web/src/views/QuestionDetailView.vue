@@ -20,7 +20,14 @@
           <span class="type">{{ questionTypeLabel(question.questionType) }}</span>
           <MasteryBadge :value="question.mastery" />
           <span class="difficulty">
-            <van-icon name="star-o" /> 难度 {{ question.difficulty }}
+            难度
+            <van-rate
+              :model-value="question.difficulty"
+              readonly
+              :size="11"
+              color="#f59e0b"
+              void-color="#e2e8f0"
+            />
           </span>
         </div>
 
@@ -214,7 +221,7 @@ onMounted(load);
 .difficulty {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
   color: var(--muted);
   font-size: 11px;
 }

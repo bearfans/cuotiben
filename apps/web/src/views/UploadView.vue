@@ -43,10 +43,7 @@
           </button>
         </div>
 
-        <div class="student-bar card">
-          <span class="student-label">当前孩子</span>
-          <StudentSwitcher />
-        </div>
+        <StudentSwitcher variant="card" class="student-block" @add="goProfile" />
 
         <template v-if="mode === 'ai'">
           <div class="section">
@@ -90,11 +87,10 @@
                 :after-read="afterRead"
                 :before-delete="beforeDelete"
                 :preview-full-image="true"
+                :class="{ centered: !fileList.length }"
               >
                 <div class="upload-trigger">
-                  <span class="upload-icon"><van-icon name="photograph" size="27" /></span>
-                  <strong>拍照 / 从相册选择</strong>
-                  <small>一页一张，最多 9 张</small>
+                  <span class="upload-icon"><van-icon name="photograph" size="34" /></span>
                 </div>
               </van-uploader>
               <div class="upload-tip">
@@ -128,9 +124,7 @@
         <template v-else>
           <div class="manual-tip">
             <van-icon name="bulb-o" />
-            <span>
-              题干和解析支持 LaTeX，例如输入 <code>$x^2+1$</code> 会显示为公式。
-            </span>
+            <span>数学、物理符号可点击「插入符号」生成，题目会直接显示公式的最终效果。</span>
           </div>
 
           <div v-if="manualDraft" class="manual-form">
@@ -229,6 +223,10 @@ function setMode(next: EntryMode): void {
   if (mode.value === next) return;
   mode.value = next;
   syncModeQuery(next);
+}
+
+function goProfile(): void {
+  void router.push('/profile');
 }
 
 function syncModeQuery(value: EntryMode): void {
@@ -436,17 +434,8 @@ async function saveManual(): Promise<void> {
   color: rgba(255, 255, 255, 0.78);
 }
 
-.student-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 12px 14px;
-}
-
-.student-label {
-  color: var(--muted);
-  font-size: 11.5px;
+.student-block {
+  display: block;
 }
 
 .small {
@@ -488,10 +477,23 @@ async function saveManual(): Promise<void> {
   padding: 16px;
 }
 
+/* 未选图片时，相机/上传按钮在卡片内居中显示 */
+.upload-card :deep(.van-uploader.centered) {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.upload-card :deep(.van-uploader.centered .van-uploader__upload) {
+  width: 132px;
+  height: 132px;
+  margin: 0;
+}
+
 .upload-card :deep(.van-uploader__upload) {
   width: 96px;
   height: 96px;
-  margin: 0;
+  margin: 0 8px 8px 0;
   border: 1.5px dashed #bbf7d0;
   border-radius: 14px;
   background: #f8faff;
@@ -504,15 +506,13 @@ async function saveManual(): Promise<void> {
 .upload-card :deep(.van-uploader__preview-image) {
   width: 96px;
   height: 96px;
-  border-radius: 12px;
+  border-radius: 14px;
 }
 
 .upload-trigger {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
   width: 100%;
   height: 100%;
   color: var(--text-2);
@@ -521,21 +521,11 @@ async function saveManual(): Promise<void> {
 .upload-icon {
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
-  margin-bottom: 2px;
-  border-radius: 12px;
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
   background: var(--brand-soft);
   color: var(--brand);
-}
-
-.upload-trigger strong {
-  font-size: 11.5px;
-}
-
-.upload-trigger small {
-  color: var(--muted);
-  font-size: 9.5px;
 }
 
 .upload-tip {

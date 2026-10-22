@@ -282,7 +282,7 @@ function buildItems(nextJob: AiJob): ConfirmItem[] {
           analysis: question.analysis ?? '',
           errorReason: question.errorReason ?? '',
           note: '',
-          difficulty: question.difficulty ?? 3,
+          difficulty: question.difficulty ?? 4,
           mastery: 0,
           knowledgePoints: question.knowledgePoints ?? [],
         },
@@ -417,7 +417,7 @@ function addManual(): void {
     analysis: '',
     errorReason: '',
     note: '',
-    difficulty: 3,
+    difficulty: 4,
     mastery: 0,
     knowledgePoints: [],
   };
@@ -804,11 +804,12 @@ onBeforeUnmount(stopPolling);
   width: 100%;
   max-width: 600px;
   padding: 10px 16px calc(10px + var(--safe-bottom));
-  border-top: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 -8px 26px rgba(15, 23, 42, 0.06);
+  border-top: 0;
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  box-shadow: 0 -10px 30px -8px rgba(15, 23, 42, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.85);
   transform: translateX(-50%);
-  backdrop-filter: blur(12px);
 }
 
 .footer-select {

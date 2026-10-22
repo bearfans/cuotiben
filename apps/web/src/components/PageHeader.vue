@@ -46,15 +46,18 @@ function goBack(): void {
   align-items: center;
   gap: 10px;
   min-height: 56px;
-  padding: 8px 16px;
-  background: rgba(244, 246, 251, 0.92);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  padding: calc(8px + var(--safe-top)) 16px 8px;
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .page-header--plain {
   background: transparent;
+  -webkit-backdrop-filter: none;
   backdrop-filter: none;
+  box-shadow: none;
 }
 
 .header-icon {
@@ -63,11 +66,13 @@ function goBack(): void {
   width: 36px;
   height: 36px;
   flex: 0 0 auto;
-  border: 0;
+  border: 1px solid var(--glass-border-soft);
   border-radius: 50%;
-  background: var(--surface);
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   color: var(--text);
-  box-shadow: var(--shadow-soft);
+  box-shadow: var(--shadow-soft), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .header-title {

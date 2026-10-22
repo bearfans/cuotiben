@@ -37,9 +37,10 @@ export class OpenAiProvider implements AiProvider {
   async recognize(input: AiRecognitionInput): Promise<AiRecognitionOutput> {
     const image = await sharp(input.image, { failOn: 'none' })
       .rotate()
+      // For stitched images, only limit width to preserve aspect ratio and height
       .resize({
         width: this.maxImageEdge,
-        height: this.maxImageEdge,
+        height: input.isStitched ? undefined : this.maxImageEdge,
         fit: 'inside',
         withoutEnlargement: true,
       })
@@ -101,7 +102,7 @@ export class OpenAiProvider implements AiProvider {
       model: this.model,
       messages,
       temperature: 0.1,
-      max_tokens: 4096,
+      max_tokens: 8000,
     };
     if (jsonMode) body.response_format = { type: 'json_object' };
 

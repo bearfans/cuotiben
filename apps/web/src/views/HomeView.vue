@@ -6,7 +6,7 @@
           <p class="hello">{{ greeting }}，{{ auth.user?.displayName || '家长' }}</p>
           <h1>今天也一起进步</h1>
         </div>
-        <StudentSwitcher />
+        <StudentSwitcher @add="goProfile" />
       </div>
 
       <div v-if="studentStore.currentStudent" class="overview-card">
@@ -246,6 +246,10 @@ function openKnowledge(point: KnowledgeStat): void {
   void router.push({ path: '/questions', query: { knowledgePointId: point.knowledgePointId } });
 }
 
+function goProfile(): void {
+  void router.push('/profile');
+}
+
 onMounted(load);
 watch(() => studentStore.currentStudentId, load);
 </script>
@@ -256,7 +260,7 @@ watch(() => studentStore.currentStudentId, load);
 }
 
 .home-hero {
-  padding: 18px 18px 44px;
+  padding: calc(18px + var(--safe-top)) 18px 44px;
   background:
     radial-gradient(circle at 90% 10%, rgba(255, 255, 255, 0.2), transparent 36%),
     linear-gradient(145deg, #15803d 0%, #16a34a 42%, #22c55e 100%);
@@ -292,10 +296,12 @@ watch(() => studentStore.currentStudentId, load);
   gap: 12px;
   margin-top: 20px;
   padding: 16px 18px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.28);
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.18);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  backdrop-filter: blur(16px) saturate(160%);
+  box-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.5);
 }
 
 .overview-copy {
