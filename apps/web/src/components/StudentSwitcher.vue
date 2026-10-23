@@ -9,10 +9,7 @@
     >
       <template v-if="variant === 'card'">
         <span class="sc-body">
-          <span class="avatar avatar--lg">
-            <van-icon v-if="!student" name="plus" size="18" />
-            <template v-else>{{ initial }}</template>
-          </span>
+          <UserAvatar :name="student?.name" size="lg" :add="!student" />
           <span class="info">
             <strong>{{ student?.name ?? '添加孩子' }}</strong>
             <small v-if="student">{{ gradeLabel(student.grade) }} · {{ semesterLabel(student.semester) }}</small>
@@ -22,10 +19,7 @@
         <van-icon name="arrow-down" size="16" class="sc-arrow" :class="{ rotated: open }" />
       </template>
       <template v-else>
-        <span class="avatar">
-          <van-icon v-if="!student" name="plus" size="14" />
-          <template v-else>{{ initial }}</template>
-        </span>
+        <UserAvatar :name="student?.name" size="sm" :add="!student" />
         <span class="info">
           <strong>{{ student?.name ?? '添加孩子' }}</strong>
           <small v-if="student">{{ gradeLabel(student.grade) }} · {{ semesterLabel(student.semester) }}</small>
@@ -53,23 +47,21 @@
             :class="{ active: item.id === currentStudentId }"
             @click="choose(item.id)"
           >
-            <span class="avatar">
-              {{ item.name.slice(0, 1) }}
-            </span>
+            <UserAvatar :name="item.name" size="sm" />
             <span class="option-main">
               <strong>{{ item.name }}</strong>
               <small>{{ gradeLabel(item.grade) }} · {{ semesterLabel(item.semester) }}</small>
             </span>
-            <van-icon v-if="item.id === currentStudentId" name="passed" color="#16a34a" />
+            <van-icon v-if="item.id === currentStudentId" name="passed" color="var(--brand)" />
           </button>
 
           <button type="button" class="student-option add-option" @click="add">
-            <span class="avatar add-avatar"><van-icon name="plus" size="15" /></span>
+            <UserAvatar add size="sm" />
             <span class="option-main">
               <strong>添加孩子</strong>
               <small>新建一份孩子档案</small>
             </span>
-            <van-icon name="plus" color="#16a34a" />
+            <van-icon name="plus" color="var(--brand)" />
           </button>
         </div>
       </div>
@@ -84,6 +76,7 @@
 import { computed, ref } from 'vue';
 import { gradeLabel, semesterLabel } from '@myos/shared';
 import { useStudentStore } from '@/stores/student';
+import UserAvatar from '@/components/UserAvatar.vue';
 
 const props = withDefaults(
   defineProps<{
@@ -104,7 +97,6 @@ const open = ref(false);
 const student = computed(() => studentStore.currentStudent);
 const students = computed(() => studentStore.students);
 const currentStudentId = computed(() => studentStore.currentStudentId);
-const initial = computed(() => student.value?.name.slice(0, 1) ?? '');
 
 function toggle(): void {
   open.value = !open.value;
@@ -189,13 +181,6 @@ function add(): void {
   transform: rotate(180deg);
 }
 
-.avatar--lg {
-  width: 46px;
-  height: 46px;
-  font-size: 18px;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.7);
-}
-
 .student-switch--card .info strong {
   font-size: 16px;
 }
@@ -205,20 +190,6 @@ function add(): void {
   color: var(--text-2);
   font-size: 12px;
   opacity: 1;
-}
-
-.avatar {
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  flex: 0 0 auto;
-  border-radius: 50%;
-  background: var(--avatar-bg);
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.28);
-  color: #fff;
-  font-size: 14px;
-  font-weight: 700;
 }
 
 .info {
@@ -307,14 +278,8 @@ function add(): void {
 }
 
 .student-option.active {
-  border-color: rgba(22, 163, 74, 0.4);
+  border-color: rgba(var(--accent-rgb), 0.4);
   background: var(--brand-soft);
-}
-
-.add-option .add-avatar {
-  background: var(--brand-soft);
-  color: var(--brand);
-  box-shadow: none;
 }
 
 .option-main {

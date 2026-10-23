@@ -35,21 +35,21 @@
     <div class="page home-body">
       <div v-if="studentStore.currentStudent" class="stat-grid">
         <div class="stat-card card">
-          <span class="stat-icon" style="background: #e8f7ee; color: #16a34a">
+          <span class="stat-icon" style="background: var(--brand-soft); color: var(--brand)">
             <van-icon name="notes-o" />
           </span>
           <strong>{{ stats?.activeQuestions ?? 0 }}</strong>
           <span>错题总数</span>
         </div>
         <div class="stat-card card">
-          <span class="stat-icon" style="background: #dcfce7; color: #15803d">
+          <span class="stat-icon" style="background: var(--success-soft); color: var(--success)">
             <van-icon name="certificate" />
           </span>
           <strong>{{ stats?.masteredQuestions ?? 0 }}</strong>
           <span>已掌握</span>
         </div>
         <div class="stat-card card">
-          <span class="stat-icon" style="background: #fef3c7; color: #d97706">
+          <span class="stat-icon" style="background: var(--warning-soft); color: var(--warning)">
             <van-icon name="fire-o" />
           </span>
           <strong>{{ stats?.addedLast7Days ?? 0 }}</strong>
@@ -137,7 +137,7 @@
                 </div>
               </div>
               <span class="weak-score">{{ point.avgMastery.toFixed(1) }}</span>
-              <van-icon name="arrow" color="#cbd5e1" />
+              <van-icon name="arrow" color="var(--muted)" />
             </button>
           </div>
         </section>
@@ -263,7 +263,7 @@ watch(() => studentStore.currentStudentId, load);
   padding: calc(18px + var(--safe-top)) 18px 44px;
   background:
     radial-gradient(circle at 90% 10%, rgba(255, 255, 255, 0.2), transparent 36%),
-    linear-gradient(145deg, #15803d 0%, #16a34a 42%, #22c55e 100%);
+    linear-gradient(145deg, var(--accent-strong) 0%, var(--accent) 52%, var(--accent-light) 100%);
   color: #fff;
   border-radius: 0 0 28px 28px;
 }
@@ -477,14 +477,14 @@ watch(() => studentStore.currentStudentId, load);
   flex: 1;
   overflow: hidden;
   border-radius: 6px;
-  background: linear-gradient(to top, #e8f7ee, transparent);
+  background: linear-gradient(to top, var(--brand-soft), transparent);
 }
 
 .trend-track span {
   display: block;
   width: 100%;
   border-radius: 6px 6px 3px 3px;
-  background: linear-gradient(to top, #22c55e, #86efac);
+  background: linear-gradient(to top, var(--brand), var(--brand-light));
 }
 
 .trend-label {
@@ -544,12 +544,12 @@ watch(() => studentStore.currentStudentId, load);
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #f59e0b, #f97316);
+  background: linear-gradient(90deg, var(--warning), var(--accent-light));
 }
 
 .weak-score {
   width: 28px;
-  color: #d97706;
+  color: var(--warning-strong);
   font-size: 13px;
   font-weight: 800;
   text-align: right;

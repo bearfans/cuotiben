@@ -1,16 +1,31 @@
 <template>
   <div>
-    <PageHeader
-      :title="isEdit ? '编辑错题' : '手动录入'"
-      :subtitle="isEdit ? '修改后会自动保存到错题本' : '把错题完整记录下来，整理更高效'"
-    />
-
-    <div v-if="loading" class="page">
+    <div v-if="loading" class="page"> 
       <div class="skeleton-card" style="height: 180px" />
       <div class="skeleton-card" style="height: 220px" />
     </div>
 
     <div v-else-if="draft" class="page edit-page">
+      <div class="page-heading">
+        <div class="page-heading-copy">
+          <h1>{{ isEdit ? '编辑错题' : '手动录入' }}</h1>
+          <p>{{ isEdit ? '修改后会自动保存到错题本' : '把错题完整记录下来，整理更高效' }}</p>
+        </div>
+        <div class="page-heading-actions">
+          <van-button size="small" round plain :disabled="saving" @click="cancel">取消</van-button>
+          <van-button
+            size="small"
+            round
+            type="primary"
+            :loading="saving"
+            loading-text="保存中..."
+            @click="save"
+          >
+            保存
+          </van-button>
+        </div>
+      </div>
+
       <div v-if="!studentStore.currentStudent" class="card panel">
         <EmptyState icon="friends-o" title="请先添加孩子档案" description="错题需要归属到具体孩子">
           <van-button round type="primary" @click="router.push('/profile')">去添加</van-button>
@@ -24,20 +39,6 @@
         </div>
 
         <QuestionForm :draft="draft" :subjects="studentStore.subjects" />
-
-        <div class="sticky-actions">
-          <van-button block round plain @click="cancel">取消</van-button>
-          <van-button
-            block
-            round
-            type="primary"
-            :loading="saving"
-            loading-text="保存中..."
-            @click="save"
-          >
-            {{ isEdit ? '保存修改' : '保存到错题本' }}
-          </van-button>
-        </div>
       </template>
     </div>
 
@@ -57,7 +58,6 @@ import type { Semester } from '@myos/shared';
 import { questionsApi } from '@/api';
 import { errorMessage } from '@/api/client';
 import { useStudentStore } from '@/stores/student';
-import PageHeader from '@/components/PageHeader.vue';
 import QuestionForm from '@/components/QuestionForm.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import {
@@ -147,7 +147,7 @@ onMounted(init);
 
 <style scoped>
 .edit-page {
-  padding-top: 4px;
+  padding-top: calc(14px + var(--safe-top));
 }
 
 .panel {
@@ -162,7 +162,7 @@ onMounted(init);
   padding: 10px 12px;
   border-radius: 10px;
   background: var(--amber-soft);
-  color: #92400e;
+  color: var(--warning-strong);
   font-size: 11px;
   line-height: 1.55;
 }
@@ -172,10 +172,5 @@ onMounted(init);
   border-radius: 4px;
   background: rgba(255, 255, 255, 0.65);
   font-size: 10.5px;
-}
-
-.sticky-actions {
-  grid-template-columns: 0.8fr 1.6fr;
-  display: grid;
 }
 </style>

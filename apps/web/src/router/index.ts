@@ -19,11 +19,6 @@ const router = createRouter({
         { path: 'home', name: 'home', component: () => import('@/views/HomeView.vue') },
         { path: 'upload', name: 'upload', component: () => import('@/views/UploadView.vue') },
         {
-          path: 'upload/confirm/:jobId',
-          name: 'upload-confirm',
-          component: () => import('@/views/ConfirmView.vue'),
-        },
-        {
           path: 'questions',
           name: 'questions',
           component: () => import('@/views/QuestionsView.vue'),

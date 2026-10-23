@@ -155,9 +155,9 @@ async function submit(): Promise<void> {
   margin: 0 auto;
   padding: 0 20px calc(24px + var(--safe-bottom));
   background:
-    radial-gradient(circle at 88% 8%, rgba(34, 197, 94, 0.22), transparent 32%),
-    radial-gradient(circle at 8% 28%, rgba(22, 163, 74, 0.14), transparent 30%),
-    linear-gradient(165deg, #e8f7ee 0%, #f7fbf7 46%, #f3f8f3 100%);
+    radial-gradient(circle at 88% 8%, rgba(var(--accent-rgb), 0.16), transparent 32%),
+    radial-gradient(circle at 8% 28%, rgba(var(--accent-rgb), 0.1), transparent 30%),
+    linear-gradient(165deg, var(--accent-soft) 0%, var(--bg) 46%, var(--bg) 100%);
 }
 
 .hero {
@@ -172,9 +172,9 @@ async function submit(): Promise<void> {
   height: 68px;
   margin: 0 auto 16px;
   border-radius: 22px;
-  background: linear-gradient(140deg, #15803d, #16a34a 55%, #22c55e);
+  background: linear-gradient(140deg, var(--accent-strong), var(--accent) 55%, var(--accent-light));
   color: #fff;
-  box-shadow: 0 14px 32px rgba(22, 163, 74, 0.3);
+  box-shadow: 0 14px 32px rgba(var(--accent-rgb), 0.28);
 }
 
 .hero h1 {
@@ -194,7 +194,7 @@ async function submit(): Promise<void> {
 
 .hero-tags span {
   padding: 4px 10px;
-  border: 1px solid rgba(22, 163, 74, 0.14);
+  border: 1px solid rgba(var(--accent-rgb), 0.12);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.6);
   color: var(--brand);

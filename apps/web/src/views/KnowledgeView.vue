@@ -1,14 +1,20 @@
 <template>
   <div>
-    <PageHeader title="知识点" subtitle="发现薄弱环节，集中突破" :back="false" />
-
     <div class="page knowledge-page">
+      <div class="page-heading">
+        <div class="page-heading-copy">
+          <h1>知识点</h1>
+          <p>发现薄弱环节，集中突破</p>
+        </div>
+        <PageActions :actions="headerActions" @select="onHeaderAction" />
+      </div>
+
       <van-tabs
         v-model:active="activeTab"
         background="transparent"
-        color="#16a34a"
-        title-active-color="#16a34a"
-        title-inactive-color="#94a3b8"
+        color="var(--brand)"
+        title-active-color="var(--brand)"
+        title-inactive-color="var(--muted)"
         line-width="24"
         @change="onTabChange"
       >
@@ -88,9 +94,6 @@
               @search="loadLibrary"
               @clear="loadLibrary"
             />
-            <button type="button" class="add-btn" @click="openAdd">
-              <van-icon name="plus" />
-            </button>
           </div>
 
           <div class="chip-row subject-chips">
@@ -136,7 +139,7 @@
                   </small>
                 </span>
                 <span class="usage">{{ point.usageCount }} 题</span>
-                <van-icon name="ellipsis" color="#cbd5e1" />
+                <van-icon name="ellipsis" color="var(--muted)" />
               </button>
             </div>
             <div v-else class="card empty-card">
@@ -189,7 +192,7 @@
             <span class="muted small">{{ point.usageCount }} 题</span>
             <van-icon
               :name="mergeTargetId === point.id ? 'passed' : 'circle'"
-              :color="mergeTargetId === point.id ? '#16a34a' : '#cbd5e1'"
+              :color="mergeTargetId === point.id ? 'var(--brand)' : 'var(--muted)'"
             />
           </button>
           <p v-if="!mergeTargets.length" class="muted empty-merge">该学科下没有其他可合并的知识点</p>
@@ -245,9 +248,9 @@ import {
 import { knowledgeApi, statsApi } from '@/api';
 import { errorMessage } from '@/api/client';
 import { useStudentStore } from '@/stores/student';
-import PageHeader from '@/components/PageHeader.vue';
 import SubjectPill from '@/components/SubjectPill.vue';
 import EmptyState from '@/components/EmptyState.vue';
+import PageActions from '@/components/PageActions.vue';
 import { formatDate } from '@/utils/format';
 
 const router = useRouter();
@@ -273,10 +276,16 @@ const newSubjectId = ref('');
 const saving = ref(false);
 const libraryLoaded = ref(false);
 
+const headerActions = [{ label: '添加知识点', value: 'add', icon: 'plus' }];
+
+function onHeaderAction(value: string): void {
+  if (value === 'add') openAdd();
+}
+
 const actions = computed(() => [
   { name: '重命名', value: 'rename' },
   { name: '合并到其他知识点', value: 'merge' },
-  { name: '删除', value: 'delete', color: '#e11d48' },
+  { name: '删除', value: 'delete', color: 'var(--danger)' },
 ]);
 
 const mergeTargets = computed(() =>
@@ -397,7 +406,7 @@ async function deletePoint(): Promise<void> {
       title: '删除知识点',
       message: `确认删除「${selectedPoint.value.name}」吗？已关联错题的知识点不能删除。`,
       confirmButtonText: '删除',
-      confirmButtonColor: '#e11d48',
+      confirmButtonColor: 'var(--danger)',
     });
     await knowledgeApi.remove(selectedPoint.value.id);
     showToast('已删除');
@@ -453,7 +462,7 @@ onMounted(() => {
 
 <style scoped>
 .knowledge-page {
-  padding-top: 0;
+  padding-top: calc(14px + var(--safe-top));
 }
 
 .knowledge-page :deep(.van-tabs__nav) {
@@ -501,7 +510,7 @@ onMounted(() => {
 
 .rank.top {
   background: var(--amber-soft);
-  color: #b45309;
+  color: var(--warning-strong);
 }
 
 .point-main {
@@ -534,7 +543,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  color: #d97706;
+  color: var(--warning-strong);
   font-size: 15px;
   font-weight: 800;
   line-height: 1.1;
@@ -558,7 +567,7 @@ onMounted(() => {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #f59e0b, #f97316);
+  background: linear-gradient(90deg, var(--warning), var(--accent-light));
 }
 
 .point-meta {
@@ -603,19 +612,6 @@ onMounted(() => {
 .library-tools :deep(.van-search__content) {
   background: var(--surface);
   box-shadow: var(--shadow-soft);
-}
-
-.add-btn {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  flex: 0 0 auto;
-  border: 0;
-  border-radius: 50%;
-  background: var(--brand);
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25);
 }
 
 .library-list {
@@ -717,7 +713,7 @@ onMounted(() => {
 }
 
 .merge-row.active {
-  border-color: rgba(22, 163, 74, 0.4);
+  border-color: rgba(var(--accent-rgb), 0.4);
   background: var(--brand-soft);
 }
 

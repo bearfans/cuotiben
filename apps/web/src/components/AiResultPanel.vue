@@ -1,68 +1,23 @@
 <template>
-  <div class="confirm-page">
-    <PageHeader
-      title="确认识别结果"
-      subtitle="核对并修正后，再保存到错题本"
-    >
-      <template #right>
-        <button v-if="job" type="button" class="header-action" @click="router.replace('/upload')">
-          重新上传
-        </button>
-      </template>
-    </PageHeader>
-
-    <div class="page confirm-body">
-      <div v-if="loading" class="processing card">
+  <div class="ai-result">
+    <div v-if="loading" class="processing card">
         <div class="scan-orb">
           <van-icon name="scan" size="32" />
         </div>
         <h2>AI 正在识别题目</h2>
         <p>正在提取题干、答案和知识点，通常需要几秒到半分钟</p>
-        <van-loading size="22" color="#16a34a" />
+        <van-loading size="22" color="var(--brand)" />
       </div>
 
       <template v-else-if="job">
-        <div class="job-strip card">
-          <div class="job-images">
-            <div v-for="image in job.images" :key="image.id" class="job-image">
-              <img :src="image.thumbnailUrl || image.imageUrl" alt="上传的题目" />
-              <span class="image-status" :class="image.status.toLowerCase()">
-                {{ imageStatusLabel(image.status) }}
-              </span>
-            </div>
-          </div>
-          <div class="job-meta">
-            <span>共 {{ job.imageCount }} 张图片</span>
-            <span class="dot">·</span>
-            <span>识别出 {{ items.length }} 道题</span>
-            <span v-if="job.status === 'PARTIAL'" class="warn">部分图片失败</span>
-          </div>
-        </div>
-
-        <van-notice-bar
-          v-if="job.status === 'PARTIAL'"
-          wrapable
-          :scrollable="false"
-          mode="closeable"
-          color="#b45309"
-          background="#fffbeb"
-          left-icon="info-o"
-          class="job-notice"
-        >
-          部分图片识别失败，可先保存已识别题目，或返回重新上传。
-        </van-notice-bar>
-
         <div v-if="job.status === 'FAILED'" class="card failed-card">
           <EmptyState
             icon="warning-o"
             title="识别失败"
-            :description="job.error || '图片可能不够清晰，请重试或重新上传'"
+            :description="job.error || '图片可能不够清晰，请重新上传'"
           >
             <div class="failed-actions">
-              <van-button round type="primary" :loading="retrying" @click="retryJob">
-                重试识别
-              </van-button>
-              <van-button round plain @click="router.replace('/upload')">重新上传</van-button>
+              <van-button round type="primary" @click="emit('reset')">重新上传</van-button>
             </div>
           </EmptyState>
         </div>
@@ -70,10 +25,7 @@
         <template v-else-if="items.length">
           <div class="list-head">
             <h2 class="section-title">识别结果</h2>
-            <div class="list-tools">
-              <button type="button" @click="selectOnlyWrong">只选错题</button>
-              <button type="button" @click="selectAll">全选</button>
-            </div>
+            <button type="button" class="retry-link" @click="emit('reset')">重新上传</button>
           </div>
 
           <article
@@ -86,7 +38,7 @@
               <button type="button" class="check-btn" @click="item.include = !item.include">
                 <van-icon
                   :name="item.include ? 'passed' : 'circle'"
-                  :color="item.include ? '#16a34a' : '#cbd5e1'"
+                  :color="item.include ? 'var(--brand)' : 'var(--muted)'"
                   size="22"
                 />
               </button>
@@ -123,47 +75,32 @@
                 {{ item.draft.knowledgePoints.join(' · ') }}
               </span>
             </div>
-
-            <span v-if="!item.isWrong" class="not-wrong-flag">AI 判断这题已掌握</span>
           </article>
-
-          <button type="button" class="add-manual" @click="addManual">
-            <van-icon name="plus" /> 识别漏了？手动添加一道
-          </button>
         </template>
 
         <div v-else class="card empty-result">
           <EmptyState
             icon="search"
-            title="没有识别出题目"
-            description="可以手动添加，或换一张更清晰的图片重新识别"
+            title="未识别到错题"
+            description="正确题目和无法识别的题目不会返回；可以换一张更清晰的图片重试"
           >
-            <van-button round type="primary" @click="addManual">手动添加</van-button>
+            <van-button round type="primary" @click="emit('reset')">重新上传</van-button>
           </EmptyState>
         </div>
       </template>
-    </div>
 
-    <div v-if="items.length && job && job.status !== 'FAILED'" class="confirm-footer">
-      <button type="button" class="footer-select" @click="toggleAll">
-        <van-icon
-          :name="allSelected ? 'passed' : 'circle'"
-          :color="allSelected ? '#16a34a' : '#cbd5e1'"
-          size="20"
-        />
-        <span>全选</span>
-      </button>
-      <span class="footer-count">已选 <b>{{ selectedCount }}</b> 道</span>
-      <van-button
-        round
-        type="primary"
-        :loading="saving"
-        :disabled="!selectedCount"
-        @click="save"
-      >
-        保存到错题本
-      </van-button>
-    </div>
+      <div v-if="items.length && job && job.status !== 'FAILED'" class="confirm-save-bar">
+        <van-button
+          block
+          round
+          type="primary"
+          :loading="saving"
+          :disabled="!selectedCount"
+          @click="save"
+        >
+          {{ selectedCount ? `保存 ${selectedCount} 道错题` : '保存到错题本' }}
+        </van-button>
+      </div>
 
     <van-popup
       v-model:show="showEditor"
@@ -191,7 +128,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRouter } from 'vue-router';
 import { showLoadingToast, showToast } from 'vant';
 import {
   SUBJECT_MAP,
@@ -203,7 +140,6 @@ import {
 import { aiApi, questionsApi } from '@/api';
 import { errorMessage } from '@/api/client';
 import { useStudentStore } from '@/stores/student';
-import PageHeader from '@/components/PageHeader.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import RichText from '@/components/RichText.vue';
 import SubjectPill from '@/components/SubjectPill.vue';
@@ -213,13 +149,13 @@ import { draftToPayload, isValidDraft, type QuestionDraft } from '@/types/questi
 interface ConfirmItem {
   key: string;
   include: boolean;
-  sourceUploadId: string;
   confidence: number;
-  isWrong: boolean;
   draft: QuestionDraft;
 }
 
-const route = useRoute();
+const props = defineProps<{ jobId: string }>();
+const emit = defineEmits<{ (e: 'reset'): void }>();
+
 const router = useRouter();
 const studentStore = useStudentStore();
 
@@ -227,40 +163,25 @@ const job = ref<AiJob | null>(null);
 const loading = ref(true);
 const items = ref<ConfirmItem[]>([]);
 const saving = ref(false);
-const retrying = ref(false);
 const showEditor = ref(false);
 const editIndex = ref(-1);
 const editDraft = ref<QuestionDraft | null>(null);
+const notifiedJobId = ref<string | null>(null);
 let timer: ReturnType<typeof setInterval> | null = null;
 
 const selectedCount = computed(() => items.value.filter((item) => item.include).length);
-const allSelected = computed(
-  () => items.value.length > 0 && items.value.every((item) => item.include),
-);
-
-function imageStatusLabel(status: string): string {
-  return (
-    {
-      PENDING: '等待',
-      PROCESSING: '识别中',
-      SUCCEEDED: '完成',
-      FAILED: '失败',
-    }[status] ?? status
-  );
-}
 
 function buildItems(nextJob: AiJob): ConfirmItem[] {
   const result: ConfirmItem[] = [];
   for (const image of nextJob.images) {
     if (!image.result?.questions?.length) continue;
     for (const [index, question] of image.result.questions.entries()) {
+      if (question.isWrong === false) continue;
       const subject = resolveSubject(question, image.result.subject, nextJob);
       result.push({
         key: `${image.id}-${index}`,
-        include: question.isWrong !== false,
-        sourceUploadId: image.uploadFileId,
+        include: true,
         confidence: question.confidence ?? 0.8,
-        isWrong: question.isWrong !== false,
         draft: {
           subjectId: subject,
           grade: nextJob.grade,
@@ -311,11 +232,30 @@ function resolveSubject(
 async function loadJob(initial = false): Promise<void> {
   if (initial) loading.value = true;
   try {
-    const { data } = await aiApi.getJob(String(route.params.jobId));
+    const { data } = await aiApi.getJob(props.jobId);
     job.value = data;
     if (data.status === 'SUCCEEDED' || data.status === 'PARTIAL') {
       if (!items.value.length) {
         items.value = buildItems(data);
+      }
+      if (notifiedJobId.value !== data.id) {
+        notifiedJobId.value = data.id;
+        const wrongCount = items.value.length;
+        const unreadableCount = data.images.reduce(
+          (sum, image) => sum + (image.result?.unreadableCount ?? 0),
+          0,
+        );
+        const parts = [
+          wrongCount ? `识别完成，共 ${wrongCount} 道错题` : '识别完成，未识别到错题',
+        ];
+        if (unreadableCount > 0) {
+          parts.push(`由于题目过于模糊${unreadableCount}道题无法识别`);
+        }
+        showToast(
+          wrongCount
+            ? { message: `${parts.join('。')}。`, icon: 'passed', duration: 3000 }
+            : { message: `${parts.join('。')}。`, duration: 3000 },
+        );
       }
       stopPolling();
       loading.value = false;
@@ -347,40 +287,6 @@ function stopPolling(): void {
   }
 }
 
-async function retryJob(): Promise<void> {
-  if (!job.value) return;
-  retrying.value = true;
-  try {
-    await aiApi.retry(job.value.id);
-    items.value = [];
-    loading.value = true;
-    startPolling();
-  } catch (error) {
-    showToast(errorMessage(error));
-  } finally {
-    retrying.value = false;
-  }
-}
-
-function selectAll(): void {
-  items.value.forEach((item) => {
-    item.include = true;
-  });
-}
-
-function selectOnlyWrong(): void {
-  items.value.forEach((item) => {
-    item.include = item.isWrong;
-  });
-}
-
-function toggleAll(): void {
-  const next = !allSelected.value;
-  items.value.forEach((item) => {
-    item.include = next;
-  });
-}
-
 function openEditor(index: number): void {
   editIndex.value = index;
   editDraft.value = JSON.parse(JSON.stringify(items.value[index].draft)) as QuestionDraft;
@@ -395,41 +301,6 @@ function applyEditor(): void {
   }
   items.value[editIndex.value].draft = editDraft.value;
   showEditor.value = false;
-}
-
-function addManual(): void {
-  const student = studentStore.currentStudent;
-  const subjectId = job.value?.subjectHint ?? studentStore.subjects[0]?.id ?? 'math';
-  const draft: QuestionDraft = {
-    subjectId,
-    grade: student?.grade ?? 1,
-    semester: (student?.semester ?? 'FIRST') as Semester,
-    questionType: 'SINGLE_CHOICE',
-    stem: '',
-    options: [
-      { label: 'A', content: '' },
-      { label: 'B', content: '' },
-      { label: 'C', content: '' },
-      { label: 'D', content: '' },
-    ],
-    correctAnswer: '',
-    studentAnswer: '',
-    analysis: '',
-    errorReason: '',
-    note: '',
-    difficulty: 4,
-    mastery: 0,
-    knowledgePoints: [],
-  };
-  items.value.push({
-    key: `manual-${Date.now()}`,
-    include: true,
-    sourceUploadId: '',
-    confidence: 1,
-    isWrong: true,
-    draft,
-  });
-  openEditor(items.value.length - 1);
 }
 
 async function save(): Promise<void> {
@@ -462,7 +333,6 @@ async function save(): Promise<void> {
         draftToPayload(item.draft, {
           source: 'AI',
           sourceJobId: job.value?.id,
-          sourceImageIds: item.sourceUploadId ? [item.sourceUploadId] : [],
         }),
       ),
     });
@@ -485,21 +355,8 @@ onBeforeUnmount(stopPolling);
 </script>
 
 <style scoped>
-.confirm-page {
-  min-height: 100vh;
-  padding-bottom: calc(78px + var(--safe-bottom));
-}
-
-.confirm-body {
-  padding-top: 4px;
-}
-
-.header-action {
-  border: 0;
-  background: transparent;
-  color: var(--brand);
-  font-size: 12px;
-  font-weight: 600;
+.ai-result {
+  display: block;
 }
 
 .processing {
@@ -517,7 +374,7 @@ onBeforeUnmount(stopPolling);
   height: 74px;
   margin-bottom: 18px;
   border-radius: 24px;
-  background: linear-gradient(145deg, #e8f7ee, #d7f2e1);
+  background: linear-gradient(145deg, var(--brand-soft), var(--surface));
   color: var(--brand);
   animation: pulse 1.6s ease-in-out infinite;
 }
@@ -526,11 +383,11 @@ onBeforeUnmount(stopPolling);
   0%,
   100% {
     transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.12);
+    box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0.12);
   }
   50% {
     transform: scale(1.04);
-    box-shadow: 0 0 0 14px rgba(22, 163, 74, 0);
+    box-shadow: 0 0 0 14px rgba(var(--accent-rgb), 0);
   }
 }
 
@@ -545,75 +402,6 @@ onBeforeUnmount(stopPolling);
   color: var(--muted);
   font-size: 12px;
   line-height: 1.6;
-}
-
-.job-strip {
-  padding: 12px;
-}
-
-.job-images {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 4px;
-}
-
-.job-image {
-  position: relative;
-  width: 76px;
-  height: 76px;
-  flex: 0 0 auto;
-  overflow: hidden;
-  border-radius: 10px;
-  background: var(--surface-soft);
-}
-
-.job-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.image-status {
-  position: absolute;
-  right: 4px;
-  bottom: 4px;
-  padding: 1px 5px;
-  border-radius: 5px;
-  background: rgba(15, 23, 42, 0.62);
-  color: #fff;
-  font-size: 8.5px;
-}
-
-.image-status.failed {
-  background: rgba(225, 29, 72, 0.86);
-}
-
-.image-status.succeeded {
-  background: rgba(22, 163, 74, 0.86);
-}
-
-.job-meta {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  flex-wrap: wrap;
-  margin-top: 10px;
-  color: var(--muted);
-  font-size: 11px;
-}
-
-.job-meta .warn {
-  color: #d97706;
-}
-
-.dot {
-  opacity: 0.5;
-}
-
-.job-notice {
-  margin-top: 10px;
-  border-radius: 10px;
 }
 
 .failed-card,
@@ -632,20 +420,18 @@ onBeforeUnmount(stopPolling);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 20px 2px 10px;
+  gap: 10px;
+  margin: 4px 2px 10px;
 }
 
-.list-tools {
-  display: flex;
-  gap: 12px;
-}
-
-.list-tools button {
+.retry-link {
+  padding: 4px 0;
   border: 0;
   background: transparent;
   color: var(--brand);
   font-size: 11.5px;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .result-card {
@@ -697,7 +483,7 @@ onBeforeUnmount(stopPolling);
 
 .confidence.low {
   background: var(--amber-soft);
-  color: #b45309;
+  color: var(--warning-strong);
 }
 
 .edit-btn {
@@ -767,74 +553,23 @@ onBeforeUnmount(stopPolling);
   font-size: 10.5px;
 }
 
-.not-wrong-flag {
-  display: inline-block;
-  margin-top: 8px;
-  padding: 2px 7px;
-  border-radius: 5px;
-  background: var(--surface-soft);
-  color: var(--muted);
-  font-size: 9.5px;
-}
-
-.add-manual {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  width: 100%;
-  margin-top: 14px;
-  padding: 13px;
-  border: 1px dashed #bbf7d0;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.5);
-  color: var(--brand);
-  font-size: 12.5px;
-  font-weight: 600;
-}
-
-.confirm-footer {
-  position: fixed;
-  bottom: 0;
-  left: 50%;
-  z-index: 30;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  max-width: 600px;
-  padding: 10px 16px calc(10px + var(--safe-bottom));
-  border-top: 0;
+.confirm-save-bar {
+  position: sticky;
+  bottom: calc(70px + var(--safe-bottom));
+  z-index: 20;
+  display: block;
+  margin: 16px -16px 0;
+  padding: 10px 16px;
   background: var(--glass-bg-strong);
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  box-shadow: 0 -10px 30px -8px rgba(15, 23, 42, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.85);
-  transform: translateX(-50%);
+  box-shadow:
+    0 -10px 30px -8px rgba(15, 23, 42, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
 }
 
-.footer-select {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  border: 0;
-  background: transparent;
-  color: var(--text-2);
-  font-size: 11.5px;
-}
-
-.footer-count {
-  flex: 1;
-  color: var(--muted);
-  font-size: 11.5px;
-}
-
-.footer-count b {
-  color: var(--brand);
-  font-size: 14px;
-}
-
-.confirm-footer :deep(.van-button) {
-  min-width: 126px;
+.confirm-save-bar :deep(.van-button) {
+  width: 100%;
 }
 
 .editor-popup {

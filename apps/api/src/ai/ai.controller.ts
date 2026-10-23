@@ -23,11 +23,6 @@ export class AiController {
     return this.aiService.getJob(user.id, id);
   }
 
-  @Post('jobs/:id/retry')
-  retry(@CurrentUser() user: AuthUser, @Param('id') id: string) {
-    return this.aiService.retry(user.id, id);
-  }
-
   @Get('quota')
   quota(@CurrentUser() user: AuthUser) {
     return this.aiService.quota(user.id);

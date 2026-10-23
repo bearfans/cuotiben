@@ -1,39 +1,31 @@
 <template>
-  <div>
-    <PageHeader title="创错题试卷" subtitle="从错题本生成可打印的练习试卷" :back="false">
-      <template #right>
-        <button type="button" class="header-add" @click="router.push('/papers/new')">
-          <van-icon name="plus" /> 新建
-        </button>
-      </template>
-    </PageHeader>
-
+  <div class="papers-view">
     <div class="page papers-page">
-      <div class="create-banner">
-        <div class="banner-copy">
-          <span class="banner-label">错题重练</span>
-          <h2>把错题变成一张试卷</h2>
+      <section class="papers-hero">
+        <div class="hero-copy">
+          <span class="hero-label">错题重练</span>
+          <h1>把错题变成一张试卷</h1>
           <p>按学科、掌握度筛选题目，A4 排版，答案单独成页</p>
-          <van-button round size="small" class="banner-btn" @click="router.push('/papers/new')">
-            开始组卷
-            <van-icon name="arrow" />
+          <van-button round size="small" class="hero-action" @click="router.push('/papers/new')">
+            <van-icon name="plus" />
+            新建试卷
           </van-button>
         </div>
-        <div class="banner-art">
-          <span class="paper-sheet back" />
-          <span class="paper-sheet front">
+        <div class="hero-art">
+          <span class="hero-sheet back" />
+          <span class="hero-sheet front">
             <i />
             <i />
             <i />
             <i />
           </span>
         </div>
-      </div>
+      </section>
 
       <div v-if="paperSelection.count" class="selection-banner card" @click="router.push('/papers/new')">
-        <van-icon name="passed" color="#16a34a" size="18" />
+        <van-icon name="passed" color="var(--brand)" size="18" />
         <span>已从错题本选择 <b>{{ paperSelection.count }}</b> 道题</span>
-        <van-icon name="arrow" color="#94a3b8" />
+        <van-icon name="arrow" color="var(--muted)" />
       </div>
 
       <div class="section-head list-head">
@@ -41,48 +33,50 @@
         <span class="muted small">{{ papers.length }} 份</span>
       </div>
 
-      <div v-if="loading" class="tab-loading">
-        <div class="skeleton-card" />
-        <div class="skeleton-card" />
-      </div>
-
-      <template v-else>
-        <button
-          v-for="paper in papers"
-          :key="paper.id"
-          type="button"
-          class="paper-card card"
-          @click="router.push(`/papers/${paper.id}`)"
-        >
-          <div class="paper-icon">
-            <van-icon name="description-o" size="24" />
-          </div>
-          <div class="paper-main">
-            <strong>{{ paper.title }}</strong>
-            <div class="paper-meta">
-              <span v-if="paper.subjectId">{{ subjectName(paper.subjectId) }}</span>
-              <span>{{ paper.questionCount }} 道题</span>
-              <span>{{ formatDate(paper.createdAt, 'YYYY-MM-DD') }}</span>
-            </div>
-            <div class="paper-tags">
-              <span v-if="paper.settings.includeAnswers" class="tag">含答案</span>
-              <span v-if="paper.settings.includeKnowledgePoints" class="tag">含知识点</span>
-              <span v-if="paper.hasPdf" class="tag pdf">已生成 PDF</span>
-            </div>
-          </div>
-          <van-icon name="arrow" color="#cbd5e1" />
-        </button>
-
-        <div v-if="!papers.length" class="card empty-card">
-          <EmptyState
-            icon="description-o"
-            title="还没有生成过试卷"
-            description="从错题中挑几道题，生成一张专属练习卷，打印出来练一练"
-          >
-            <van-button round type="primary" @click="router.push('/papers/new')">生成第一份试卷</van-button>
-          </EmptyState>
+      <div class="papers-scroll-wrap">
+        <div v-if="loading" class="tab-loading">
+          <div class="skeleton-card" />
+          <div class="skeleton-card" />
         </div>
-      </template>
+
+        <template v-else>
+          <button
+            v-for="paper in papers"
+            :key="paper.id"
+            type="button"
+            class="paper-card card"
+            @click="router.push(`/papers/${paper.id}`)"
+          >
+            <div class="paper-icon">
+              <van-icon name="description-o" size="24" />
+            </div>
+            <div class="paper-main">
+              <strong>{{ paper.title }}</strong>
+              <div class="paper-meta">
+                <span v-if="paper.subjectId">{{ subjectName(paper.subjectId) }}</span>
+                <span>{{ paper.questionCount }} 道题</span>
+                <span>{{ formatDate(paper.createdAt, 'YYYY-MM-DD') }}</span>
+              </div>
+              <div class="paper-tags">
+                <span v-if="paper.settings.includeAnswers" class="tag">含答案</span>
+                <span v-if="paper.settings.includeKnowledgePoints" class="tag">含知识点</span>
+                <span v-if="paper.hasPdf" class="tag pdf">已生成 PDF</span>
+              </div>
+            </div>
+            <van-icon name="arrow" color="var(--muted)" />
+          </button>
+
+          <div v-if="!papers.length" class="card empty-card">
+            <EmptyState
+              icon="description-o"
+              title="还没有生成过试卷"
+              description="从错题中挑几道题，生成一张专属练习卷，打印出来练一练"
+            >
+              <van-button round type="primary" @click="router.push('/papers/new')">生成第一份试卷</van-button>
+            </EmptyState>
+          </div>
+        </template>
+      </div>
     </div>
   </div>
 </template>
@@ -96,7 +90,6 @@ import { papersApi } from '@/api';
 import { errorMessage } from '@/api/client';
 import { useStudentStore } from '@/stores/student';
 import { usePaperSelectionStore } from '@/stores/paperSelection';
-import PageHeader from '@/components/PageHeader.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import { formatDate } from '@/utils/format';
 
@@ -124,45 +117,60 @@ onMounted(load);
 </script>
 
 <style scoped>
+.papers-view {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 76px - var(--safe-bottom));
+  height: calc(100dvh - 76px - var(--safe-bottom));
+  overflow: hidden;
+}
+
 .papers-page {
-  padding-top: 4px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  padding-top: calc(10px + var(--safe-top));
+  padding-bottom: 0;
 }
 
-.header-add {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  padding: 6px 11px;
-  border: 0;
-  border-radius: 999px;
-  background: var(--brand);
-  color: #fff;
-  font-size: 12px;
-  font-weight: 600;
+.papers-page > :not(.papers-scroll-wrap) {
+  flex: 0 0 auto;
 }
 
-.create-banner {
+.papers-scroll-wrap {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 8px;
+}
+
+.papers-hero {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   overflow: hidden;
+  margin-bottom: 12px;
   padding: 20px 18px;
   border-radius: 22px;
   background:
-    radial-gradient(circle at 92% 12%, rgba(255, 255, 255, 0.24), transparent 38%),
-    linear-gradient(135deg, #15803d, #16a34a 55%, #22c55e);
+    radial-gradient(circle at 92% 12%, rgba(255, 255, 255, 0.22), transparent 38%),
+    linear-gradient(135deg, var(--accent-strong), var(--accent) 55%, var(--accent-light));
   color: #fff;
-  box-shadow: 0 12px 28px rgba(22, 163, 74, 0.22);
+  box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.22);
 }
 
-.banner-copy {
+.hero-copy {
   position: relative;
   z-index: 1;
+  min-width: 0;
 }
 
-.banner-label {
+.hero-label {
   display: inline-block;
   padding: 2px 8px;
   border-radius: 999px;
@@ -171,36 +179,28 @@ onMounted(load);
   letter-spacing: 0.6px;
 }
 
-.banner-copy h2 {
+.hero-copy h1 {
   margin: 7px 0 4px;
   font-size: 19px;
   font-weight: 700;
 }
 
-.banner-copy p {
-  max-width: 210px;
-  margin: 0 0 12px;
+.hero-copy p {
+  max-width: 220px;
+  margin: 0;
   color: rgba(255, 255, 255, 0.74);
   font-size: 10.5px;
   line-height: 1.55;
 }
 
-.banner-btn {
-  height: 32px;
-  border: 0;
-  background: #fff;
-  color: var(--brand-dark);
-  font-size: 11.5px;
-}
-
-.banner-art {
+.hero-art {
   position: relative;
   width: 84px;
   height: 104px;
   flex: 0 0 auto;
 }
 
-.paper-sheet {
+.hero-sheet {
   position: absolute;
   display: flex;
   flex-direction: column;
@@ -212,35 +212,59 @@ onMounted(load);
   background: #fff;
 }
 
-.paper-sheet.back {
+.hero-sheet.back {
   top: 4px;
   right: 2px;
   opacity: 0.4;
   transform: rotate(9deg);
 }
 
-.paper-sheet.front {
+.hero-sheet.front {
   top: 10px;
   right: 12px;
   transform: rotate(-5deg);
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.18);
 }
 
-.paper-sheet.front i {
+.hero-sheet.front i {
   display: block;
   height: 4px;
   border-radius: 999px;
-  background: #dcfce7;
+  background: var(--accent-soft);
 }
 
-.paper-sheet.front i:nth-child(1) {
+.hero-sheet.front i:first-child {
   width: 70%;
   height: 6px;
-  background: #86efac;
+  background: var(--accent-light);
 }
 
-.paper-sheet.front i:nth-child(3) {
+.hero-sheet.front i:nth-child(3) {
   width: 84%;
+}
+
+.hero-action {
+  height: 34px;
+  margin-top: 12px;
+  padding: 0 16px;
+  border: 0;
+  background: #fff;
+  color: var(--brand-dark);
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.16);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.hero-action :deep(.van-icon) {
+  margin-right: 3px;
+}
+
+.hero-action:active {
+  transform: scale(0.97);
+  box-shadow: 0 5px 12px rgba(15, 23, 42, 0.14);
 }
 
 .selection-banner {

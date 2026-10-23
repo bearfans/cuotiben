@@ -18,14 +18,15 @@ export const aiQuestionSchema = z.object({
   knowledgePoints: z.array(z.string()).optional().default([]),
   difficulty: z.coerce.number().min(1).max(5).optional().default(3),
   errorReason: z.string().optional().nullable(),
-  isWrong: z.boolean().optional().default(true),
+  isWrong: z.boolean().optional().default(false),
   confidence: z.coerce.number().min(0).max(1).optional().default(0.8),
 });
 
 export const aiRecognitionSchema = z.object({
   subject: z.string().optional().nullable(),
-  questions: z.array(aiQuestionSchema).min(1),
+  questions: z.array(aiQuestionSchema).optional().default([]),
   imageQuality: z.enum(['GOOD', 'BLURRY', 'PARTIAL']).optional().default('GOOD'),
+  unreadableCount: z.coerce.number().int().min(0).optional().default(0),
 });
 
 export type AiRecognitionPayload = z.infer<typeof aiRecognitionSchema>;
@@ -65,13 +66,15 @@ export function normalizeQuestionType(value: string | null | undefined): Questio
 export function normalizeAiPayload(payload: AiRecognitionPayload): AiRecognitionPayload {
   return {
     ...payload,
-    questions: payload.questions.map((question) => ({
-      ...question,
-      questionType: normalizeQuestionType(question.questionType),
-      knowledgePoints: question.knowledgePoints
-        .map((point) => point.trim())
-        .filter(Boolean)
-        .slice(0, 6),
-    })),
+    questions: payload.questions
+      .filter((question) => question.isWrong === true)
+      .map((question) => ({
+        ...question,
+        questionType: normalizeQuestionType(question.questionType),
+        knowledgePoints: question.knowledgePoints
+          .map((point) => point.trim())
+          .filter(Boolean)
+          .slice(0, 6),
+      })),
   };
 }

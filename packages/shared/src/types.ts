@@ -91,14 +91,12 @@ export interface AiQuestionResult {
 
 export interface AiJobImage {
   id: string;
-  uploadFileId: string;
   status: 'PENDING' | 'PROCESSING' | 'SUCCEEDED' | 'FAILED';
-  imageUrl: string;
-  thumbnailUrl?: string;
   result?: {
     subject?: string;
     questions: AiQuestionResult[];
     imageQuality?: string;
+    unreadableCount?: number;
   } | null;
   error?: string | null;
   confidence?: number | null;
@@ -200,8 +198,6 @@ export interface AuthResponse {
 
 export interface UploadedFile {
   id: string;
-  url: string;
-  thumbnailUrl: string;
   width: number;
   height: number;
   mimeType: string;

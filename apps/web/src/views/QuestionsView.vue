@@ -1,14 +1,26 @@
 <template>
-  <div>
-    <PageHeader title="错题" :subtitle="`${total} 道错题 · 按掌握程度筛选`" :back="false">
-      <template #right>
-        <button type="button" class="header-add" @click="router.push('/upload')">
-          <van-icon name="plus" /> 录入
-        </button>
-      </template>
-    </PageHeader>
-
+  <div class="questions-view">
     <div class="page questions-page">
+      <section class="questions-hero">
+        <div class="hero-copy">
+          <span class="hero-label">错题本</span>
+          <h1>错题整理</h1>
+          <p>共 {{ total }} 道错题 · 按学科和掌握程度筛选复习</p>
+          <van-button round size="small" class="hero-action" @click="router.push('/upload')">
+            <van-icon name="plus" />
+            录入错题
+          </van-button>
+        </div>
+        <div class="hero-art">
+          <span class="hero-note">
+            <i />
+            <i />
+            <i />
+            <span class="hero-wrong"><van-icon name="cross" size="17" /></span>
+          </span>
+        </div>
+      </section>
+
       <van-search
         v-model="keyword"
         shape="round"
@@ -45,10 +57,20 @@
           筛选
           <span v-if="filterCount" class="filter-count">{{ filterCount }}</span>
         </button>
+
         <div class="toolbar-right">
-          <button type="button" class="text-btn" @click="toggleManage">
-            {{ manageMode ? '完成' : '批量管理' }}
+          <button
+            v-if="!manageMode || !selectedIds.size"
+            type="button"
+            class="manage-btn"
+            @click="toggleManage"
+          >
+            {{ manageMode ? '退出管理' : '批量管理' }}
           </button>
+          <template v-else>
+            <span class="selected-count">已选 {{ selectedIds.size }}</span>
+            <PageActions :actions="manageActions" @select="onManageAction" />
+          </template>
         </div>
       </div>
 
@@ -57,65 +79,41 @@
         <button type="button" @click="clearKnowledgeFilter"><van-icon name="cross" /></button>
       </div>
 
-      <div v-if="manageMode" class="batch-bar card">
-        <button type="button" class="batch-check" @click="toggleSelectAll">
-          <van-icon
-            :name="allPageSelected ? 'passed' : 'circle'"
-            :color="allPageSelected ? '#16a34a' : '#cbd5e1'"
-            size="20"
+      <div ref="scrollWrap" class="questions-scroll-wrap">
+        <van-list
+          v-model:loading="loading"
+          :finished="finished"
+          :finished-text="items.length ? '没有更多错题了' : ''"
+          :immediate-check="false"
+          @load="loadMore"
+        >
+          <QuestionCard
+            v-for="question in items"
+            :key="question.id"
+            :question="question"
+            :selectable="manageMode"
+            :selected="selectedIds.has(question.id)"
+            @open="router.push(`/questions/${question.id}`)"
+            @toggle="toggleSelect"
           />
-          全选本页
-        </button>
-        <span class="batch-count">已选 {{ selectedIds.size }}</span>
-        <van-button size="small" round type="primary" :disabled="!selectedIds.size" @click="addToPaper">
-          去组卷
-        </van-button>
-        <van-button size="small" round plain :disabled="!selectedIds.size" @click="archiveSelected">
-          归档
-        </van-button>
-        <button
-          type="button"
-          class="batch-delete"
-          :disabled="!selectedIds.size"
-          @click="deleteSelected"
-        >
-          删除
-        </button>
-      </div>
+        </van-list>
 
-      <van-list
-        v-model:loading="loading"
-        :finished="finished"
-        :finished-text="items.length ? '没有更多错题了' : ''"
-        :immediate-check="false"
-        @load="loadMore"
-      >
-        <QuestionCard
-          v-for="question in items"
-          :key="question.id"
-          :question="question"
-          :selectable="manageMode"
-          :selected="selectedIds.has(question.id)"
-          @open="router.push(`/questions/${question.id}`)"
-          @toggle="toggleSelect"
-        />
-      </van-list>
-
-      <div v-if="!loading && !items.length" class="card empty-card">
-        <EmptyState
-          icon="search"
-          title="没有找到错题"
-          :description="hasFilters ? '试试调整筛选条件，或搜索其他关键词' : '拍照识别或手动录入第一道错题吧'"
-        >
-          <div class="empty-actions">
-            <van-button round type="primary" size="small" @click="router.push('/upload')">
-              去录题
-            </van-button>
-            <van-button v-if="hasFilters" round plain size="small" @click="resetFilters">
-              清除筛选
-            </van-button>
-          </div>
-        </EmptyState>
+        <div v-if="!loading && !items.length" class="card empty-card">
+          <EmptyState
+            icon="search"
+            title="没有找到错题"
+            :description="hasFilters ? '试试调整筛选条件，或搜索其他关键词' : '拍照识别或手动录入第一道错题吧'"
+          >
+            <div class="empty-actions">
+              <van-button round type="primary" size="small" @click="router.push('/upload')">
+                去录题
+              </van-button>
+              <van-button v-if="hasFilters" round plain size="small" @click="resetFilters">
+                清除筛选
+              </van-button>
+            </div>
+          </EmptyState>
+        </div>
       </div>
     </div>
 
@@ -207,9 +205,9 @@ import { knowledgeApi, questionsApi } from '@/api';
 import { errorMessage } from '@/api/client';
 import { useStudentStore } from '@/stores/student';
 import { usePaperSelectionStore } from '@/stores/paperSelection';
-import PageHeader from '@/components/PageHeader.vue';
 import QuestionCard from '@/components/QuestionCard.vue';
 import EmptyState from '@/components/EmptyState.vue';
+import PageActions from '@/components/PageActions.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -222,6 +220,7 @@ const page = ref(1);
 const pageSize = 20;
 const loading = ref(false);
 const finished = ref(false);
+const scrollWrap = ref<HTMLElement | null>(null);
 const keyword = ref('');
 const subjectId = ref('');
 const questionType = ref('');
@@ -259,6 +258,28 @@ const allPageSelected = computed(
   () => items.value.length > 0 && items.value.every((item) => selectedIds.value.has(item.id)),
 );
 
+const manageActions = computed(() => [
+  {
+    label: allPageSelected.value ? '取消全选' : '全选本页',
+    value: 'toggle-all',
+  },
+  {
+    label: `去组卷 (${selectedIds.value.size})`,
+    value: 'paper',
+  },
+  { label: '归档', value: 'archive' },
+  { label: '删除', value: 'delete', danger: true },
+  { label: '退出管理', value: 'exit' },
+]);
+
+function onManageAction(value: string): void {
+  if (value === 'exit') toggleManage();
+  else if (value === 'toggle-all') toggleSelectAll();
+  else if (value === 'paper') void addToPaper();
+  else if (value === 'archive') void archiveSelected();
+  else if (value === 'delete') void deleteSelected();
+}
+
 function buildQuery(pageNumber: number) {
   const [sortBy, sortOrder] = sortValue.value.split('_') as [string, 'asc' | 'desc'];
   return {
@@ -282,6 +303,7 @@ async function load(reset = false): Promise<void> {
     page.value = 1;
     finished.value = false;
     items.value = [];
+    scrollWrap.value?.scrollTo({ top: 0 });
   }
   if (!studentStore.currentStudentId) {
     items.value = [];
@@ -397,7 +419,7 @@ async function deleteSelected(): Promise<void> {
       title: '删除错题',
       message: '删除后将无法恢复，确认删除选中的错题吗？',
       confirmButtonText: '删除',
-      confirmButtonColor: '#e11d48',
+      confirmButtonColor: 'var(--danger)',
     });
     const ids = Array.from(selectedIds.value);
     await questionsApi.batchAction(ids, 'delete');
@@ -442,21 +464,153 @@ watch(
 </script>
 
 <style scoped>
-.questions-page {
-  padding-top: 0;
+.questions-view {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 76px - var(--safe-bottom));
+  height: calc(100dvh - 76px - var(--safe-bottom));
+  overflow: hidden;
 }
 
-.header-add {
-  display: inline-flex;
+.questions-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  padding-top: calc(10px + var(--safe-top));
+  padding-bottom: 0;
+}
+
+.questions-page > :not(.questions-scroll-wrap) {
+  flex: 0 0 auto;
+}
+
+.questions-scroll-wrap {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 8px;
+}
+
+.questions-hero {
+  position: relative;
+  display: flex;
   align-items: center;
-  gap: 2px;
-  padding: 6px 11px;
-  border: 0;
-  border-radius: 999px;
-  background: var(--brand);
+  justify-content: space-between;
+  gap: 12px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  padding: 20px 18px;
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 92% 12%, rgba(255, 255, 255, 0.22), transparent 38%),
+    linear-gradient(135deg, var(--accent-strong), var(--accent) 55%, var(--accent-light));
   color: #fff;
+  box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.22);
+}
+
+.hero-copy {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+.hero-label {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  font-size: 9.5px;
+  letter-spacing: 0.6px;
+}
+
+.hero-copy h1 {
+  margin: 7px 0 4px;
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.hero-copy p {
+  max-width: 220px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.74);
+  font-size: 10.5px;
+  line-height: 1.55;
+}
+
+.hero-art {
+  position: relative;
+  width: 84px;
+  height: 104px;
+  flex: 0 0 auto;
+}
+
+.hero-note {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 64px;
+  height: 88px;
+  padding: 14px 10px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.18);
+  transform: rotate(-4deg);
+}
+
+.hero-note i {
+  display: block;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+}
+
+.hero-note i:first-child {
+  width: 70%;
+  height: 7px;
+  background: var(--accent-light);
+}
+
+.hero-note i:nth-child(3) {
+  width: 84%;
+}
+
+.hero-wrong {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: red;
+  line-height: 1;
+}
+
+.hero-action {
+  height: 34px;
+  margin-top: 12px;
+  padding: 0 16px;
+  border: 0;
+  background: #fff;
+  color: var(--brand-dark);
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.16);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.hero-action :deep(.van-icon) {
+  margin-right: 3px;
+}
+
+.hero-action:active {
+  transform: scale(0.97);
+  box-shadow: 0 5px 12px rgba(15, 23, 42, 0.14);
 }
 
 .questions-page :deep(.van-search) {
@@ -476,7 +630,30 @@ watch(
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
   margin-bottom: 10px;
+}
+
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.manage-btn {
+  padding: 6px 2px;
+  border: 0;
+  background: transparent;
+  color: var(--brand);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.selected-count {
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
 }
 
 .filter-btn {
@@ -492,7 +669,7 @@ watch(
 }
 
 .filter-btn.active {
-  border-color: rgba(22, 163, 74, 0.35);
+  border-color: rgba(var(--accent-rgb), 0.35);
   color: var(--brand);
 }
 
@@ -506,19 +683,6 @@ watch(
   background: var(--brand);
   color: #fff;
   font-size: 9px;
-}
-
-.toolbar-right {
-  display: flex;
-  gap: 10px;
-}
-
-.text-btn {
-  border: 0;
-  background: transparent;
-  color: var(--brand);
-  font-size: 12px;
-  font-weight: 600;
 }
 
 .active-filter {
@@ -538,43 +702,6 @@ watch(
   border: 0;
   background: transparent;
   color: var(--brand);
-}
-
-.batch-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-bottom: 12px;
-  padding: 10px 12px;
-}
-
-.batch-check {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  border: 0;
-  background: transparent;
-  color: var(--text-2);
-  font-size: 11px;
-}
-
-.batch-count {
-  flex: 1;
-  color: var(--muted);
-  font-size: 11px;
-}
-
-.batch-delete {
-  border: 0;
-  background: transparent;
-  color: var(--rose);
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.batch-delete:disabled {
-  color: var(--muted);
 }
 
 .empty-card {

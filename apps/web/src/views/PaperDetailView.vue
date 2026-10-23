@@ -1,154 +1,115 @@
 <template>
   <div>
-    <PageHeader
-      :title="paper?.title ?? '试卷详情'"
-      :subtitle="paper ? `${paper.questionCount} 道题 · ${formatDate(paper.createdAt, 'YYYY年MM月DD日')}` : ''"
-    >
-      <template #right>
-        <button v-if="paper" type="button" class="icon-btn" @click="openRename">
-          <van-icon name="edit" size="17" />
-        </button>
-      </template>
-    </PageHeader>
-
     <div v-if="loading" class="page">
       <div class="skeleton-card" style="height: 150px" />
       <div class="skeleton-card" style="height: 300px" />
     </div>
 
     <div v-else-if="paper" class="page paper-detail">
-      <div class="paper-hero card">
-        <div class="hero-head">
-          <div class="hero-icon"><van-icon name="description-o" size="26" /></div>
-          <div class="hero-copy">
-            <h2>{{ paper.title }}</h2>
-            <p>
-              <span v-if="paper.subjectId">{{ subjectName(paper.subjectId) }}</span>
-              <span>{{ gradeLabel(paper.grade) }}</span>
-              <span>{{ paper.questionCount }} 道题</span>
-            </p>
-          </div>
+      <div class="page-heading">
+        <div class="page-heading-copy">
+          <h1>{{ paper.title }}</h1>
+          <p>{{ paper.questionCount }} 道题 · {{ formatDate(paper.createdAt, 'YYYY年MM月DD日') }}</p>
         </div>
-
-        <div class="paper-settings">
-          <span v-if="paper.settings.includeAnswers">含答案解析</span>
-          <span v-if="paper.settings.includeKnowledgePoints">含知识点</span>
-          <span v-if="paper.settings.includeStudentAnswer">含原作答</span>
-          <span v-if="paper.settings.showScore">含得分栏</span>
-        </div>
-
-        <div class="hero-actions">
-          <van-button round type="primary" icon="newspaper-o" @click="printPaper">打印 / 预览</van-button>
-          <van-button round plain icon="down" :loading="downloading" @click="downloadPdf">
-            下载 PDF
-          </van-button>
-        </div>
-        <p class="hero-tip">
-          <van-icon name="info-o" />
-          PDF 由服务器排版生成，首次下载可能需要几秒
-        </p>
+        <PageActions :actions="headerActions" @select="onHeaderAction" />
       </div>
 
-      <div class="mastery-batch card">
-        <div class="mastery-batch-icon">
-          <van-icon name="edit" size="18" />
-        </div>
-        <div class="mastery-batch-copy">
-          <strong>统一掌握程度</strong>
-          <span>一次调整本试卷全部 {{ paper.questionCount }} 道题</span>
+      <div class="paper-toolbar card">
+        <div class="toolbar-row">
+          <van-button
+            size="small"
+            round
+            plain
+            icon="records-o"
+            :disabled="!paper.items?.length"
+            @click="openBulkMastery"
+          >
+            统一掌握程度
+          </van-button>
+          <label v-if="paper.settings.includeAnswers" class="answer-toggle">
+            <span>显示答案</span>
+            <van-switch v-model="showAnswers" size="20" />
+          </label>
         </div>
         <van-button
-          size="small"
+          block
           round
-          plain
           type="primary"
-          :disabled="!paper.items?.length"
-          @click="openBulkMastery"
+          icon="newspaper-o"
+          @click="printPaper"
         >
-          设置
+          打印 / 预览
         </van-button>
       </div>
 
-      <div class="content-head">
-        <h2 class="section-title">试卷内容</h2>
-        <label class="answer-toggle">
-          <span>显示答案</span>
-          <van-switch v-model="showAnswers" size="20" />
-        </label>
-      </div>
+      <div class="paper-scroll-wrap">
+        <div v-if="paper.items?.length" class="paper-content">
+          <section v-for="group in groups" :key="group.section" class="section-block">
+            <h3 class="section-name">{{ group.label }}</h3>
+            <article
+              v-for="item in group.items"
+              :key="item.id"
+              class="paper-question card"
+              role="button"
+              tabindex="0"
+              @click="openQuestion(item.snapshot.questionId)"
+              @keyup.enter="openQuestion(item.snapshot.questionId)"
+            >
+              <div class="q-head">
+                <span class="q-number">{{ item.number }}.</span>
+                <span class="q-type">{{ questionTypeLabel(item.snapshot.questionType) }}</span>
+                <van-icon name="arrow" class="q-open" />
+              </div>
+              <div class="q-stem">
+                <RichText :text="item.snapshot.stem" />
+              </div>
+              <div v-if="item.snapshot.options?.length" class="q-options">
+                <div v-for="option in item.snapshot.options" :key="option.label" class="q-option">
+                  <span>{{ option.label }}.</span>
+                  <RichText :text="option.content" />
+                </div>
+              </div>
+              <div v-if="item.snapshot.images?.length" class="q-images">
+                <van-image
+                  v-for="image in item.snapshot.images"
+                  :key="image.id"
+                  :src="image.url"
+                  fit="cover"
+                  radius="8"
+                  @click.stop="previewImage(item.snapshot.images, image.url ?? '')"
+                />
+              </div>
 
-      <div v-if="paper.items?.length" class="paper-content">
-        <section v-for="group in groups" :key="group.section" class="section-block">
-          <h3 class="section-name">{{ group.label }}</h3>
-          <article
-            v-for="item in group.items"
-            :key="item.id"
-            class="paper-question card"
-            role="button"
-            tabindex="0"
-            @click="openQuestion(item.snapshot.questionId)"
-            @keyup.enter="openQuestion(item.snapshot.questionId)"
-          >
-            <div class="q-head">
-              <span class="q-number">{{ item.number }}.</span>
-              <span class="q-type">{{ questionTypeLabel(item.snapshot.questionType) }}</span>
-              <van-icon name="arrow" class="q-open" />
-            </div>
-            <div class="q-stem">
-              <RichText :text="item.snapshot.stem" />
-            </div>
-            <div v-if="item.snapshot.options?.length" class="q-options">
-              <div v-for="option in item.snapshot.options" :key="option.label" class="q-option">
-                <span>{{ option.label }}.</span>
-                <RichText :text="option.content" />
+              <div v-if="showAnswers && paper.settings.includeAnswers" class="q-answer">
+                <div class="answer-block">
+                  <span class="answer-label">答案</span>
+                  <RichText :text="item.snapshot.correctAnswer || '略'" />
+                </div>
+                <div
+                  v-if="paper.settings.includeStudentAnswer && item.snapshot.studentAnswer"
+                  class="answer-block student"
+                >
+                  <span class="answer-label">原作答</span>
+                  <RichText :text="item.snapshot.studentAnswer" />
+                </div>
+                <div v-if="item.snapshot.analysis" class="answer-block">
+                  <span class="answer-label">解析</span>
+                  <RichText :text="item.snapshot.analysis" />
+                </div>
+                <div
+                  v-if="paper.settings.includeKnowledgePoints && item.snapshot.knowledgePoints?.length"
+                  class="q-kps"
+                >
+                  {{ item.snapshot.knowledgePoints.join(' · ') }}
+                </div>
               </div>
-            </div>
-            <div v-if="item.snapshot.images?.length" class="q-images">
-              <van-image
-                v-for="image in item.snapshot.images"
-                :key="image.id"
-                :src="image.url"
-                fit="cover"
-                radius="8"
-                @click.stop="previewImage(item.snapshot.images, image.url ?? '')"
-              />
-            </div>
+            </article>
+          </section>
+        </div>
 
-            <div v-if="showAnswers && paper.settings.includeAnswers" class="q-answer">
-              <div class="answer-block">
-                <span class="answer-label">答案</span>
-                <RichText :text="item.snapshot.correctAnswer || '略'" />
-              </div>
-              <div
-                v-if="paper.settings.includeStudentAnswer && item.snapshot.studentAnswer"
-                class="answer-block student"
-              >
-                <span class="answer-label">原作答</span>
-                <RichText :text="item.snapshot.studentAnswer" />
-              </div>
-              <div v-if="item.snapshot.analysis" class="answer-block">
-                <span class="answer-label">解析</span>
-                <RichText :text="item.snapshot.analysis" />
-              </div>
-              <div
-                v-if="paper.settings.includeKnowledgePoints && item.snapshot.knowledgePoints?.length"
-                class="q-kps"
-              >
-                {{ item.snapshot.knowledgePoints.join(' · ') }}
-              </div>
-            </div>
-          </article>
-        </section>
-      </div>
-
-      <div v-else class="card panel">
-        <EmptyState icon="description-o" title="试卷暂无题目" description="试卷数据可能已损坏，请重新生成" />
-      </div>
-
-      <div class="detail-foot">
-        <van-button block round plain type="danger" icon="delete-o" @click="removePaper">
-          删除这份试卷
-        </van-button>
+        <div v-else class="card panel">
+          <EmptyState icon="description-o" title="试卷暂无题目" description="试卷数据可能已损坏，请重新生成" />
+        </div>
       </div>
     </div>
 
@@ -203,18 +164,16 @@ import {
 } from 'vant';
 import {
   PAPER_SECTIONS,
-  gradeLabel,
   questionTypeLabel,
-  subjectName,
   type Paper,
   type PaperItem,
 } from '@myos/shared';
 import { papersApi } from '@/api';
 import { errorMessage } from '@/api/client';
-import PageHeader from '@/components/PageHeader.vue';
 import RichText from '@/components/RichText.vue';
 import MasteryPicker from '@/components/MasteryPicker.vue';
 import EmptyState from '@/components/EmptyState.vue';
+import PageActions from '@/components/PageActions.vue';
 import { formatDate } from '@/utils/format';
 
 const route = useRoute();
@@ -236,6 +195,24 @@ interface GroupItem extends PaperItem {
 }
 
 const numerals = ['一', '二', '三', '四', '五'];
+
+const headerActions = computed(() => [
+  { label: '重命名', value: 'rename', icon: 'edit' },
+  {
+    label: '下载 PDF',
+    value: 'pdf',
+    icon: 'down',
+    loading: downloading.value,
+    disabled: downloading.value,
+  },
+  { label: '删除试卷', value: 'delete', icon: 'delete-o', danger: true },
+]);
+
+function onHeaderAction(value: string): void {
+  if (value === 'rename') openRename();
+  else if (value === 'pdf') void downloadPdf();
+  else if (value === 'delete') void removePaper();
+}
 
 const groups = computed(() => {
   const result: { section: string; label: string; items: GroupItem[] }[] = [];
@@ -388,7 +365,7 @@ async function removePaper(): Promise<void> {
       title: '删除试卷',
       message: '删除后将无法恢复，确认删除这份试卷吗？',
       confirmButtonText: '删除',
-      confirmButtonColor: '#e11d48',
+      confirmButtonColor: 'var(--danger)',
     });
     await papersApi.remove(paper.value.id);
     showToast('已删除');
@@ -403,144 +380,47 @@ onMounted(load);
 
 <style scoped>
 .paper-detail {
-  padding-top: 4px;
-}
-
-.icon-btn {
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  border: 0;
-  border-radius: 50%;
-  background: var(--surface);
-  color: var(--text-2);
-  box-shadow: var(--shadow-soft);
-}
-
-.paper-hero {
-  padding: 18px;
-}
-
-.hero-head {
   display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.hero-icon {
-  display: grid;
-  place-items: center;
-  width: 48px;
-  height: 48px;
-  flex: 0 0 auto;
-  border-radius: 15px;
-  background: var(--brand-soft);
-  color: var(--brand);
-}
-
-.hero-copy {
-  min-width: 0;
-}
-
-.hero-copy h2 {
-  margin: 0;
+  flex-direction: column;
+  height: calc(100vh - 76px - var(--safe-bottom));
+  height: calc(100dvh - 76px - var(--safe-bottom));
+  padding-top: calc(14px + var(--safe-top));
+  padding-bottom: 0;
   overflow: hidden;
-  font-size: 17px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
-.hero-copy p {
-  display: flex;
-  gap: 8px;
-  margin: 3px 0 0;
-  color: var(--muted);
-  font-size: 10.5px;
-}
-
-.paper-settings {
-  display: flex;
-  gap: 5px;
-  flex-wrap: wrap;
-  margin-top: 12px;
-}
-
-.paper-settings span {
-  padding: 2px 7px;
-  border-radius: 5px;
-  background: var(--surface-soft);
-  color: var(--text-2);
-  font-size: 9px;
-}
-
-.hero-actions {
-  display: grid;
-  grid-template-columns: 1.2fr 1fr;
-  gap: 8px;
-  margin-top: 14px;
-}
-
-.hero-actions :deep(.van-button) {
-  font-size: 12px;
-}
-
-.hero-tip {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin: 9px 0 0;
-  color: var(--muted);
-  font-size: 9.5px;
-}
-
-.mastery-batch {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 12px;
-  padding: 12px 14px;
-}
-
-.mastery-batch-icon {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
+.paper-detail > .page-heading,
+.paper-detail > .paper-toolbar {
   flex: 0 0 auto;
-  border-radius: 11px;
-  background: var(--brand-soft);
-  color: var(--brand);
 }
 
-.mastery-batch-copy {
+.paper-scroll-wrap {
   flex: 1;
-  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 8px;
 }
 
-.mastery-batch-copy strong {
-  display: block;
-  color: var(--text);
-  font-size: 12.5px;
+.paper-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
 }
 
-.mastery-batch-copy span {
-  display: block;
-  margin-top: 2px;
-  color: var(--muted);
-  font-size: 10px;
-}
-
-.mastery-batch :deep(.van-button) {
-  flex: 0 0 auto;
-  font-size: 11px;
-}
-
-.content-head {
+.toolbar-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 20px 2px 10px;
+  gap: 8px;
+  width: 100%;
+}
+
+.toolbar-row :deep(.van-button) {
+  font-size: 11px;
 }
 
 .answer-toggle {
@@ -549,6 +429,7 @@ onMounted(load);
   gap: 6px;
   color: var(--text-2);
   font-size: 10.5px;
+  white-space: nowrap;
 }
 
 .section-block {
@@ -600,7 +481,7 @@ onMounted(load);
 
 .q-open {
   margin-left: auto;
-  color: #cbd5e1;
+  color: var(--muted);
   font-size: 14px;
 }
 
@@ -680,10 +561,6 @@ onMounted(load);
 
 .panel {
   padding: 22px 16px;
-}
-
-.detail-foot {
-  margin-top: 16px;
 }
 
 .rename-sheet {

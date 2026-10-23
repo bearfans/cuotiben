@@ -1,10 +1,8 @@
 <template>
   <div>
-    <PageHeader title="我的" subtitle="账号与孩子档案管理" :back="false" />
-
     <div class="page profile-page">
       <div class="user-card card">
-        <span class="user-avatar">{{ initial }}</span>
+        <UserAvatar :name="auth.user?.displayName || auth.user?.username" size="lg" />
         <div class="user-main">
           <h2>{{ auth.user?.displayName || '家长' }}</h2>
           <p>@{{ auth.user?.username }}</p>
@@ -36,43 +34,47 @@
       <section class="section">
         <div class="menu-card card">
           <button type="button" class="menu-row" @click="router.push('/knowledge')">
-            <span class="menu-icon green"><van-icon name="label-o" /></span>
+            <van-icon class="menu-icon" name="label-o" />
             <span class="menu-main">
               <strong>知识点库</strong>
               <small>查看、合并和整理学科标签</small>
             </span>
-            <van-icon name="arrow" color="#cbd5e1" />
+            <van-icon name="arrow" color="var(--muted)" />
           </button>
           <button type="button" class="menu-row" @click="router.push('/papers')">
-            <span class="menu-icon green"><van-icon name="description-o" /></span>
+            <van-icon class="menu-icon" name="description-o" />
             <span class="menu-main">
               <strong>我的试卷</strong>
               <small>打印或下载历史组卷</small>
             </span>
-            <van-icon name="arrow" color="#cbd5e1" />
+            <van-icon name="arrow" color="var(--muted)" />
           </button>
           <button type="button" class="menu-row" @click="router.push('/questions')">
-            <span class="menu-icon amber"><van-icon name="notes-o" /></span>
+            <van-icon class="menu-icon" name="notes-o" />
             <span class="menu-main">
               <strong>全部错题</strong>
               <small>按学科和掌握度查找错题</small>
             </span>
-            <van-icon name="arrow" color="#cbd5e1" />
+            <van-icon name="arrow" color="var(--muted)" />
           </button>
           <button type="button" class="menu-row" @click="showAbout = true">
-            <span class="menu-icon slate"><van-icon name="info-o" /></span>
+            <van-icon class="menu-icon" name="info-o" />
             <span class="menu-main">
               <strong>关于错题本</strong>
               <small>版本 1.0 · 家庭 AI 学习助手</small>
             </span>
-            <van-icon name="arrow" color="#cbd5e1" />
+            <van-icon name="arrow" color="var(--muted)" />
+          </button>
+          <button type="button" class="menu-row" @click="logout">
+            <van-icon class="menu-icon danger" name="revoke" />
+            <span class="menu-main">
+              <strong class="danger-text">退出登录</strong>
+            </span>
+            <van-icon name="arrow" color="var(--muted)" />
           </button>
         </div>
       </section>
 
-      <div class="logout-area">
-        <van-button block round plain type="danger" @click="logout">退出登录</van-button>
-      </div>
       <p class="app-footer">用 AI 整理错题，让每次练习都有重点</p>
     </div>
 
@@ -135,7 +137,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue';
+import { onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { showConfirmDialog, showToast } from 'vant';
 import {
@@ -150,8 +152,8 @@ import { studentsApi } from '@/api/auth';
 import { errorMessage } from '@/api/client';
 import { useAuthStore } from '@/stores/auth';
 import { useStudentStore } from '@/stores/student';
-import PageHeader from '@/components/PageHeader.vue';
 import StudentSwitcher from '@/components/StudentSwitcher.vue';
+import UserAvatar from '@/components/UserAvatar.vue';
 
 const router = useRouter();
 const auth = useAuthStore();
@@ -167,8 +169,6 @@ const studentForm = reactive<{ name: string; grade: Grade; semester: Semester }>
   grade: 3,
   semester: 'FIRST',
 });
-
-const initial = computed(() => (auth.user?.displayName || auth.user?.username || '我').slice(0, 1));
 
 async function loadQuota(): Promise<void> {
   try {
@@ -225,7 +225,7 @@ async function logout(): Promise<void> {
       title: '退出登录',
       message: '确认退出当前账号吗？',
       confirmButtonText: '退出',
-      confirmButtonColor: '#e11d48',
+      confirmButtonColor: 'var(--danger)',
     });
     await auth.logout();
     await router.replace('/login');
@@ -239,7 +239,7 @@ onMounted(loadQuota);
 
 <style scoped>
 .profile-page {
-  padding-top: 4px;
+  padding-top: calc(14px + var(--safe-top));
 }
 
 .user-card {
@@ -248,22 +248,8 @@ onMounted(loadQuota);
   gap: 13px;
   padding: 18px;
   background:
-    radial-gradient(circle at 90% 0%, rgba(34, 197, 94, 0.1), transparent 40%),
+    radial-gradient(circle at 90% 0%, rgba(var(--accent-rgb), 0.09), transparent 40%),
     var(--surface);
-}
-
-.user-avatar {
-  display: grid;
-  place-items: center;
-  width: 54px;
-  height: 54px;
-  flex: 0 0 auto;
-  border-radius: 18px;
-  background: var(--avatar-bg);
-  color: #fff;
-  font-size: 22px;
-  font-weight: 700;
-  box-shadow: 0 8px 18px rgba(22, 163, 74, 0.25);
 }
 
 .user-main {
@@ -318,20 +304,7 @@ onMounted(loadQuota);
 }
 
 .student-card.active {
-  box-shadow: 0 0 0 1.5px rgba(22, 163, 74, 0.35);
-}
-
-.student-avatar {
-  display: grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  flex: 0 0 auto;
-  border-radius: 50%;
-  background: var(--avatar-bg);
-  color: #fff;
-  font-size: 16px;
-  font-weight: 700;
+  box-shadow: 0 0 0 1.5px rgba(var(--accent-rgb), 0.35);
 }
 
 .student-main {
@@ -471,7 +444,7 @@ onMounted(loadQuota);
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #22c55e, #16a34a);
+  background: linear-gradient(90deg, var(--brand-light), var(--brand));
 }
 
 .quota-tip {
@@ -502,28 +475,19 @@ onMounted(loadQuota);
 }
 
 .menu-icon {
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
+  width: 24px;
   flex: 0 0 auto;
-  border-radius: 10px;
-  font-size: 16px;
-}
-
-.menu-icon.green {
-  background: var(--brand-soft);
   color: var(--brand);
+  font-size: 20px;
+  text-align: center;
 }
 
-.menu-icon.amber {
-  background: var(--amber-soft);
-  color: #d97706;
+.menu-icon.danger {
+  color: var(--rose);
 }
 
-.menu-icon.slate {
-  background: var(--surface-soft);
-  color: var(--text-2);
+.danger-text {
+  color: var(--rose);
 }
 
 .menu-main {
@@ -541,10 +505,6 @@ onMounted(loadQuota);
 .menu-main small {
   color: var(--muted);
   font-size: 10px;
-}
-
-.logout-area {
-  margin-top: 22px;
 }
 
 .app-footer {

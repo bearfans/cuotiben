@@ -86,11 +86,13 @@ export class AiService {
     const job = await this.prisma.aiJob.findUnique({
       where: { id: jobId },
       include: {
-        images: { orderBy: { sortOrder: 'asc' }, include: { uploadFile: true } },
+        images: { orderBy: { sortOrder: 'asc' } },
       },
     });
     if (!job) return;
     if (job.status === 'SUCCEEDED') return;
+
+    const uploadIds = job.images.map((image) => image.uploadFileId);
 
     await this.prisma.aiJob.update({
       where: { id: jobId },
@@ -128,7 +130,7 @@ export class AiService {
 
       const output = await this.provider.recognize({
         image: stitched.buffer,
-        mimeType: isStitched ? 'image/jpeg' : job.images[0].uploadFile.mimeType,
+        mimeType: 'image/jpeg',
         isStitched,
         grade: job.grade,
         semester: job.semester,
@@ -143,21 +145,10 @@ export class AiService {
       tokensIn += output.tokensIn;
       tokensOut += output.tokensOut;
 
-      // 识别成功后，把拼接长图保存为第一张图片的原图。
-      // 确认错题时 sourceImageIds 指向第一张图片，因此最终只保存这一张长图。
-      // 放在识别成功之后写入，避免失败重试时读到已拼接的图而重复拼接。
-      if (isStitched) {
-        await this.uploads.replaceWithStitchedImage(
-          job.images[0].uploadFileId,
-          job.userId,
-          stitched.buffer,
-          stitched.width,
-          stitched.height,
-        );
-      }
+      // 拼接长图只用于本次 AI 识别，不落盘、不关联错题。
 
-      // 识别结果包含长图中的所有题目，挂在第一张图片的记录上，
-      // 其余图片仅作为拍摄凭证展示
+      // 识别结果包含长图中的所有题目，挂在第一张图片的记录上。
+      // 上传的原图会在任务结束后统一清理。
       await this.prisma.aiJobImage.updateMany({
         where: { jobId },
         data: {
@@ -205,6 +196,11 @@ export class AiService {
           error: errors.slice(0, 3).join('；').slice(0, 2000),
         },
       });
+    } finally {
+      // 无论识别成功还是失败，原图与临时记录都立即清理。
+      await this.uploads.discardUploads(uploadIds).catch((error) => {
+        this.logger.error(`AI job ${jobId} 临时图片清理失败: ${(error as Error).message}`);
+      });
     }
   }
 
@@ -212,7 +208,7 @@ export class AiService {
     const job = await this.prisma.aiJob.findFirst({
       where: { id, userId },
       include: {
-        images: { orderBy: { sortOrder: 'asc' }, include: { uploadFile: true } },
+        images: { orderBy: { sortOrder: 'asc' } },
       },
     });
     if (!job) throw new NotFoundException('识别任务不存在');
@@ -231,33 +227,12 @@ export class AiService {
       finishedAt: job.finishedAt?.toISOString() ?? null,
       images: job.images.map((image) => ({
         id: image.id,
-        uploadFileId: image.uploadFileId,
         status: image.status,
-        imageUrl: this.uploads.urlFor(image.uploadFile),
-        thumbnailUrl: this.uploads.thumbnailUrlFor(image.uploadFile),
         result: image.result as AiJob['images'][number]['result'],
         error: image.error,
         confidence: image.confidence,
       })),
     };
-  }
-
-  async retry(userId: string, id: string): Promise<AiJob> {
-    const job = await this.prisma.aiJob.findFirst({ where: { id, userId } });
-    if (!job) throw new NotFoundException('识别任务不存在');
-    if (!['FAILED', 'PARTIAL'].includes(job.status)) {
-      throw new BadRequestException('当前任务不需要重试');
-    }
-    await this.prisma.aiJobImage.updateMany({
-      where: { jobId: id, status: 'FAILED' },
-      data: { status: 'PENDING', error: null, result: Prisma.JsonNull, rawResponse: Prisma.JsonNull },
-    });
-    await this.prisma.aiJob.update({
-      where: { id },
-      data: { status: 'PENDING', error: null, finishedAt: null },
-    });
-    await this.queue.enqueue(id);
-    return this.getJob(userId, id);
   }
 
   async quota(userId: string): Promise<{ used: number; limit: number; remaining: number }> {

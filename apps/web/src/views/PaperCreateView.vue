@@ -1,8 +1,10 @@
 <template>
   <div class="paper-create">
-    <PageHeader title="生成试卷" subtitle="从错题中挑选题目，生成可打印练习卷" />
-
-    <div v-if="!studentStore.currentStudent" class="page">
+    <div v-if="!studentStore.currentStudent" class="page create-body">
+      <div class="create-head">
+        <h1>生成试卷</h1>
+        <p>从错题中挑选题目，生成可打印练习卷</p>
+      </div>
       <div class="card panel">
         <EmptyState icon="friends-o" title="请先添加孩子档案" description="试卷需要归属到具体孩子">
           <van-button round type="primary" @click="router.push('/profile')">去添加</van-button>
@@ -12,8 +14,12 @@
 
     <template v-else>
       <div class="page create-body">
+        <div class="create-head">
+          <h1>生成试卷</h1>
+          <p>从错题中挑选题目，生成可打印练习卷</p>
+        </div>
         <div v-if="paperSelection.count && usingPreselection" class="preselection card">
-          <van-icon name="passed" color="#16a34a" />
+          <van-icon name="passed" color="var(--brand)" />
           <span>已从错题本带入 <b>{{ paperSelection.count }}</b> 道题</span>
           <button type="button" @click="loadAllCandidates">加载更多错题</button>
         </div>
@@ -71,9 +77,6 @@
                 未掌握
               </button>
             </div>
-            <button type="button" class="random-btn" @click="randomSelect">
-              <van-icon name="shuffle" /> 随机 20 道
-            </button>
           </div>
         </div>
 
@@ -82,14 +85,6 @@
             <h2 class="section-title">可选错题</h2>
             <p class="list-sub">{{ candidates.length }} 道符合条件 · 点击题目选择</p>
           </div>
-          <button type="button" class="select-all" @click="toggleSelectAll">
-            <van-icon
-              :name="allSelected ? 'passed' : 'circle'"
-              :color="allSelected ? '#16a34a' : '#cbd5e1'"
-              size="19"
-            />
-            {{ allSelected ? '取消全选' : '全选' }}
-          </button>
         </div>
 
         <div v-if="loading" class="tab-loading">
@@ -109,7 +104,7 @@
             <div class="candidate-check">
               <van-icon
                 :name="selectedIds.has(candidate.id) ? 'passed' : 'circle'"
-                :color="selectedIds.has(candidate.id) ? '#16a34a' : '#cbd5e1'"
+                :color="selectedIds.has(candidate.id) ? 'var(--brand)' : 'var(--muted)'"
                 size="21"
               />
             </div>
@@ -139,24 +134,19 @@
           </div>
         </template>
 
-        <div class="safe-bottom" />
-      </div>
-
-      <div class="create-footer">
-        <div class="footer-info">
-          <span>已选</span>
-          <strong>{{ selectedIds.size }}</strong>
-          <span>道题</span>
+        <div v-if="candidates.length" class="create-footer">
+          <van-button
+            block
+            round
+            type="primary"
+            :disabled="!selectedIds.size"
+            @click="showSettings = true"
+          >
+            使用 {{ selectedIds.size }} 道题生成试卷
+          </van-button>
         </div>
-        <van-button
-          round
-          type="primary"
-          size="large"
-          :disabled="!selectedIds.size"
-          @click="showSettings = true"
-        >
-          下一步 · 试卷设置
-        </van-button>
+
+        <div class="safe-bottom" />
       </div>
     </template>
 
@@ -226,7 +216,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue';
+import { onMounted, reactive, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { showLoadingToast, showToast } from 'vant';
 import {
@@ -238,11 +228,10 @@ import { papersApi } from '@/api';
 import { errorMessage } from '@/api/client';
 import { useStudentStore } from '@/stores/student';
 import { usePaperSelectionStore } from '@/stores/paperSelection';
-import PageHeader from '@/components/PageHeader.vue';
-import SubjectPill from '@/components/SubjectPill.vue';
 import MasteryBadge from '@/components/MasteryBadge.vue';
 import RichText from '@/components/RichText.vue';
 import EmptyState from '@/components/EmptyState.vue';
+import SubjectPill from '@/components/SubjectPill.vue';
 
 const router = useRouter();
 const studentStore = useStudentStore();
@@ -264,10 +253,6 @@ const settings = reactive<PaperSettings>({
   includeStudentAnswer: false,
   showScore: true,
 });
-
-const allSelected = computed(
-  () => candidates.value.length > 0 && candidates.value.every((item) => selectedIds.value.has(item.id)),
-);
 
 async function loadCandidates(): Promise<void> {
   if (!studentStore.currentStudentId) {
@@ -330,28 +315,6 @@ function toggleCandidate(id: string): void {
   selectedIds.value = next;
 }
 
-function toggleSelectAll(): void {
-  const next = new Set(selectedIds.value);
-  if (allSelected.value) {
-    candidates.value.forEach((item) => next.delete(item.id));
-  } else {
-    candidates.value.forEach((item) => next.add(item.id));
-  }
-  selectedIds.value = next;
-}
-
-function randomSelect(): void {
-  if (!candidates.value.length) return;
-  const pool = [...candidates.value];
-  for (let i = pool.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [pool[i], pool[j]] = [pool[j], pool[i]];
-  }
-  const count = Math.min(20, pool.length);
-  selectedIds.value = new Set(pool.slice(0, count).map((item) => item.id));
-  showToast(`已随机选择 ${count} 道题`);
-}
-
 async function createPaper(): Promise<void> {
   if (!studentStore.currentStudentId || !selectedIds.value.size) return;
   creating.value = true;
@@ -396,7 +359,42 @@ watch(
 
 <style scoped>
 .create-body {
-  padding-top: 4px;
+  padding-top: calc(14px + var(--safe-top));
+}
+
+.create-head {
+  margin: 0 2px 14px;
+}
+
+.create-head h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+.create-head p {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 11.5px;
+}
+
+.create-footer {
+  position: sticky;
+  bottom: calc(70px + var(--safe-bottom));
+  z-index: 20;
+  margin: 16px -16px 0;
+  padding: 10px 16px;
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  box-shadow:
+    0 -10px 30px -8px rgba(39, 49, 47, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+.create-footer :deep(.van-button) {
+  width: 100%;
 }
 
 .panel {
@@ -466,19 +464,6 @@ watch(
   font-weight: 600;
 }
 
-.random-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  padding: 4px 9px;
-  border: 0;
-  border-radius: 999px;
-  background: var(--amber-soft);
-  color: #b45309;
-  font-size: 10px;
-  font-weight: 600;
-}
-
 .list-head {
   display: flex;
   align-items: flex-end;
@@ -491,17 +476,6 @@ watch(
   margin: 2px 0 0;
   color: var(--muted);
   font-size: 10.5px;
-}
-
-.select-all {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--text-2);
-  font-size: 11px;
 }
 
 .tab-loading {
@@ -564,49 +538,6 @@ watch(
   font-size: 9.5px;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.create-footer {
-  position: fixed;
-  bottom: 0;
-  left: 50%;
-  z-index: 30;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  width: 100%;
-  max-width: 600px;
-  padding: 10px 16px calc(10px + var(--safe-bottom));
-  border-top: 0;
-  background: var(--glass-bg-strong);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  box-shadow: 0 -10px 30px -8px rgba(15, 23, 42, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.85);
-  transform: translateX(-50%);
-}
-
-.footer-info {
-  display: flex;
-  align-items: baseline;
-  gap: 3px;
-  flex: 0 0 auto;
-  color: var(--muted);
-  font-size: 11px;
-}
-
-.footer-info strong {
-  color: var(--brand);
-  font-size: 23px;
-  font-weight: 800;
-  line-height: 1;
-}
-
-.create-footer :deep(.van-button) {
-  flex: 1;
-}
-
-.create-body {
-  padding-bottom: calc(82px + var(--safe-bottom));
 }
 
 .settings-sheet {

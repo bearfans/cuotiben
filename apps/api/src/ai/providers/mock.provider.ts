@@ -11,6 +11,7 @@ export class MockAiProvider implements AiProvider {
     const payload: AiRecognitionPayload = {
       subject,
       imageQuality: 'GOOD',
+      unreadableCount: 0,
       questions: [
         {
           questionType: 'SINGLE_CHOICE',

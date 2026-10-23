@@ -1,8 +1,11 @@
 <template>
   <div>
-    <PageHeader title="录入错题" subtitle="AI 识别或手动录入，选择适合孩子的方式" />
-
     <div class="page upload-page">
+      <div class="upload-head">
+        <h1>录入错题</h1>
+        <p>AI 识别或手动录入，选择适合孩子的方式</p>
+      </div>
+
       <div v-if="!studentStore.currentStudent" class="card panel">
         <EmptyState
           icon="friends-o"
@@ -43,9 +46,14 @@
           </button>
         </div>
 
-        <StudentSwitcher variant="card" class="student-block" @add="goProfile" />
+        <template v-if="activeJobId">
+          <AiResultPanel :key="activeJobId" :job-id="activeJobId" @reset="resetRecognition" />
+        </template>
 
-        <template v-if="mode === 'ai'">
+        <template v-else>
+          <StudentSwitcher variant="card" class="student-block" @add="goProfile" />
+
+          <template v-if="mode === 'ai'">
           <div class="section">
             <div class="section-head">
               <h2 class="section-title">选择学科</h2>
@@ -95,7 +103,7 @@
               </van-uploader>
               <div class="upload-tip">
                 <van-icon name="info-o" />
-                <span>保持光线充足、画面平整，题干与手写作答都要拍清楚</span>
+                <span>保持光线充足、画面平整；图片仅用于本次 AI 识别，完成后自动清理</span>
               </div>
             </div>
           </div>
@@ -149,23 +157,24 @@
             </van-button>
           </div>
         </template>
+        </template>
       </template>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue';
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { showToast, type UploaderFileListItem } from 'vant';
 import type { Semester } from '@myos/shared';
 import { aiApi, questionsApi, uploadsApi } from '@/api';
 import { errorMessage } from '@/api/client';
 import { useStudentStore } from '@/stores/student';
-import PageHeader from '@/components/PageHeader.vue';
 import StudentSwitcher from '@/components/StudentSwitcher.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import QuestionForm from '@/components/QuestionForm.vue';
+import AiResultPanel from '@/components/AiResultPanel.vue';
 import {
   defaultSubjectId,
   draftToPayload,
@@ -181,6 +190,7 @@ const router = useRouter();
 const studentStore = useStudentStore();
 
 const mode = ref<EntryMode>(route.query.mode === 'manual' ? 'manual' : 'ai');
+const activeJobId = ref<string | null>(null);
 const fileList = ref<UploaderFileListItem[]>([]);
 const uploadIds = ref<string[]>([]);
 const uploadIdByUrl = new Map<string, string>();
@@ -220,9 +230,21 @@ watch(
 );
 
 function setMode(next: EntryMode): void {
-  if (mode.value === next) return;
+  if (activeJobId.value) resetRecognition();
+  if (mode.value === next) {
+    syncModeQuery(next);
+    return;
+  }
   mode.value = next;
   syncModeQuery(next);
+}
+
+function resetRecognition(): void {
+  activeJobId.value = null;
+  fileList.value = [];
+  uploadIds.value = [];
+  for (const url of uploadIdByUrl.keys()) URL.revokeObjectURL(url);
+  uploadIdByUrl.clear();
 }
 
 function goProfile(): void {
@@ -267,6 +289,8 @@ async function afterRead(
   const items = Array.isArray(item) ? item : [item];
   for (const entry of items) {
     if (!entry.file) continue;
+    const previewUrl = URL.createObjectURL(entry.file);
+    entry.url = previewUrl;
     uploading.value += 1;
     entry.status = 'uploading';
     entry.message = '上传中';
@@ -274,11 +298,12 @@ async function afterRead(
       const { data } = await uploadsApi.upload([entry.file]);
       const uploaded = data[0];
       uploadIds.value.push(uploaded.id);
-      uploadIdByUrl.set(uploaded.url, uploaded.id);
-      entry.url = uploaded.url;
+      uploadIdByUrl.set(previewUrl, uploaded.id);
       entry.status = 'done';
       entry.message = '';
     } catch (error) {
+      URL.revokeObjectURL(previewUrl);
+      entry.url = '';
       entry.status = 'failed';
       entry.message = '上传失败';
       showToast(errorMessage(error));
@@ -295,9 +320,17 @@ function beforeDelete(item: UploaderFileListItem): boolean {
       uploadIds.value = uploadIds.value.filter((id) => id !== uploadId);
       uploadIdByUrl.delete(item.url);
     }
+    if (item.url.startsWith('blob:')) URL.revokeObjectURL(item.url);
   }
   return true;
 }
+
+onBeforeUnmount(() => {
+  for (const url of uploadIdByUrl.keys()) {
+    URL.revokeObjectURL(url);
+  }
+  uploadIdByUrl.clear();
+});
 
 async function startRecognition(): Promise<void> {
   if (!uploadIds.value.length) {
@@ -311,7 +344,7 @@ async function startRecognition(): Promise<void> {
       uploadIds: uploadIds.value,
       subjectHint: subjectHint.value || undefined,
     });
-    await router.push(`/upload/confirm/${data.id}`);
+    activeJobId.value = data.id;
   } catch (error) {
     showToast(errorMessage(error));
   } finally {
@@ -348,7 +381,24 @@ async function saveManual(): Promise<void> {
 
 <style scoped>
 .upload-page {
-  padding-top: 4px;
+  padding-top: calc(14px + var(--safe-top));
+}
+
+.upload-head {
+  margin: 0 2px 14px;
+}
+
+.upload-head h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+.upload-head p {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 11.5px;
 }
 
 .panel {
@@ -384,7 +434,7 @@ async function saveManual(): Promise<void> {
   border-color: transparent;
   background: linear-gradient(135deg, var(--brand-dark), var(--brand));
   color: #fff;
-  box-shadow: 0 8px 20px rgba(22, 163, 74, 0.24);
+  box-shadow: 0 8px 20px rgba(var(--accent-rgb), 0.22);
 }
 
 .mode-icon {
@@ -450,7 +500,7 @@ async function saveManual(): Promise<void> {
   padding: 10px 12px;
   border-radius: 10px;
   background: var(--amber-soft);
-  color: #92400e;
+  color: var(--warning-strong);
   font-size: 11px;
   line-height: 1.55;
 }
@@ -496,7 +546,7 @@ async function saveManual(): Promise<void> {
   margin: 0 8px 8px 0;
   border: 1.5px dashed #bbf7d0;
   border-radius: 14px;
-  background: #f8faff;
+  background: var(--surface-soft);
 }
 
 .upload-card :deep(.van-uploader__preview) {
@@ -548,6 +598,16 @@ async function saveManual(): Promise<void> {
   margin-top: 18px;
   color: var(--muted);
   font-size: 11px;
+}
+
+.sticky-actions {
+  position: sticky;
+  bottom: calc(12px + var(--safe-bottom));
+  z-index: 5;
+  display: flex;
+  gap: 10px;
+  padding: 10px 0 0;
+  background: linear-gradient(to top, var(--bg) 68%, rgba(243, 248, 243, 0));
 }
 
 .upload-actions {

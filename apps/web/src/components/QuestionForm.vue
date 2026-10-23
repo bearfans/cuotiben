@@ -128,7 +128,7 @@
     <div class="form-card card">
       <div class="rate-row">
         <span class="rate-label">难度</span>
-        <van-rate v-model="draft.difficulty" :size="22" color="#f59e0b" void-color="#dde3e9" />
+        <van-rate v-model="draft.difficulty" :size="22" color="var(--warning)" void-color="var(--line)" />
       </div>
       <div class="mastery-block">
         <span class="rate-label">掌握程度</span>

@@ -1,20 +1,21 @@
 <template>
   <div>
-    <PageHeader title="错题详情" :subtitle="question ? formatDate(question.createdAt, 'YYYY年MM月DD日录入') : ''">
-      <template #right>
-        <button v-if="question" type="button" class="icon-btn" @click="router.push(`/questions/${question.id}/edit`)">
-          <van-icon name="edit" size="18" />
-        </button>
-      </template>
-    </PageHeader>
-
     <div v-if="loading" class="page">
       <div class="skeleton-card" style="height: 260px" />
       <div class="skeleton-card" />
     </div>
 
     <div v-else-if="question" class="page detail-page">
-      <div class="card question-main">
+      <div class="page-heading">
+        <div class="page-heading-copy">
+          <h1>错题详情</h1>
+          <p>{{ formatDate(question.createdAt, 'YYYY年MM月DD日录入') }}</p>
+        </div>
+        <PageActions :actions="headerActions" @select="onHeaderAction" />
+      </div>
+
+      <div class="detail-scroll-wrap">
+        <div class="card question-main">
         <div class="meta-row">
           <SubjectPill :subject-id="question.subjectId" :subject="question.subject" />
           <span class="type">{{ questionTypeLabel(question.questionType) }}</span>
@@ -25,8 +26,8 @@
               :model-value="question.difficulty"
               readonly
               :size="11"
-              color="#f59e0b"
-              void-color="#e2e8f0"
+              color="var(--warning)"
+              void-color="var(--line)"
             />
           </span>
         </div>
@@ -102,19 +103,6 @@
         <div class="block-title">备注</div>
         <RichText :text="question.note" />
       </div>
-
-      <div class="detail-actions">
-        <van-button block round type="primary" icon="description-o" @click="addToPaper">
-          加入组卷
-        </van-button>
-        <div class="secondary-actions">
-          <van-button round plain icon="edit" @click="router.push(`/questions/${question.id}/edit`)">
-            编辑
-          </van-button>
-          <van-button round plain type="danger" icon="delete-o" @click="removeQuestion">
-            删除
-          </van-button>
-        </div>
       </div>
     </div>
 
@@ -127,7 +115,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { showConfirmDialog, showImagePreview, showToast } from 'vant';
 import {
@@ -138,12 +126,12 @@ import {
 import { questionsApi } from '@/api';
 import { errorMessage } from '@/api/client';
 import { usePaperSelectionStore } from '@/stores/paperSelection';
-import PageHeader from '@/components/PageHeader.vue';
 import RichText from '@/components/RichText.vue';
 import SubjectPill from '@/components/SubjectPill.vue';
 import MasteryBadge from '@/components/MasteryBadge.vue';
 import MasteryPicker from '@/components/MasteryPicker.vue';
 import EmptyState from '@/components/EmptyState.vue';
+import PageActions from '@/components/PageActions.vue';
 import { formatDate } from '@/utils/format';
 
 const route = useRoute();
@@ -153,6 +141,19 @@ const paperSelection = usePaperSelectionStore();
 const question = ref<WrongQuestion | null>(null);
 const loading = ref(true);
 const savingMastery = ref(false);
+
+const headerActions = computed(() => [
+  { label: '加入组卷', value: 'paper', icon: 'description-o' },
+  { label: '编辑', value: 'edit', icon: 'edit' },
+  { label: '删除', value: 'delete', icon: 'delete-o', danger: true },
+]);
+
+function onHeaderAction(value: string): void {
+  if (!question.value) return;
+  if (value === 'paper') addToPaper();
+  else if (value === 'edit') void router.push(`/questions/${question.value.id}/edit`);
+  else if (value === 'delete') void removeQuestion();
+}
 
 async function load(): Promise<void> {
   loading.value = true;
@@ -203,7 +204,7 @@ async function removeQuestion(): Promise<void> {
       title: '删除错题',
       message: '删除后将无法恢复，确认删除这道错题吗？',
       confirmButtonText: '删除',
-      confirmButtonColor: '#e11d48',
+      confirmButtonColor: 'var(--danger)',
     });
     await questionsApi.remove(question.value.id);
     showToast('已删除');
@@ -220,19 +221,27 @@ onMounted(load);
 .detail-page {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  height: calc(100vh - 76px - var(--safe-bottom));
+  height: calc(100dvh - 76px - var(--safe-bottom));
+  padding-top: calc(14px + var(--safe-top));
+  padding-bottom: 0;
+  overflow: hidden;
 }
 
-.icon-btn {
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  border: 0;
-  border-radius: 50%;
-  background: var(--surface);
-  color: var(--text-2);
-  box-shadow: var(--shadow-soft);
+.detail-page > .page-heading {
+  flex: 0 0 auto;
+}
+
+.detail-scroll-wrap {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 8px;
 }
 
 .question-main {
@@ -373,7 +382,7 @@ onMounted(load);
 }
 
 .answer-row.reason .answer-label {
-  color: #d97706;
+  color: var(--warning-strong);
 }
 
 .kp-card,
@@ -401,22 +410,5 @@ onMounted(load);
   color: var(--brand);
   font-size: 11.5px;
   font-weight: 500;
-}
-
-.detail-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 4px;
-}
-
-.secondary-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
-.secondary-actions :deep(.van-button) {
-  font-size: 12px;
 }
 </style>

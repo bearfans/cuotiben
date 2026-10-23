@@ -304,7 +304,9 @@ export class WrongQuestionsService {
   private async assertUploads(userId: string, ids: string[]): Promise<void> {
     const unique = Array.from(new Set(ids.filter(Boolean)));
     if (!unique.length) return;
-    const count = await this.prisma.uploadFile.count({ where: { userId, id: { in: unique } } });
+    const count = await this.prisma.uploadFile.count({
+      where: { userId, id: { in: unique }, temporary: false },
+    });
     if (count !== unique.length) throw new BadRequestException('部分图片不存在或无权访问');
   }
 

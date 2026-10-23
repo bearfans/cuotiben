@@ -7,7 +7,7 @@
     <div v-if="selectable" class="check" @click.stop="emit('toggle', question.id)">
       <van-icon
         :name="selected ? 'passed' : 'circle'"
-        :color="selected ? '#16a34a' : '#cbd5e1'"
+        :color="selected ? 'var(--brand)' : 'var(--muted)'"
         size="21"
       />
     </div>

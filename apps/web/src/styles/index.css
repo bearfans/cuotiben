@@ -1,45 +1,68 @@
 :root {
-  --brand: #16a34a;
-  --brand-dark: #15803d;
-  --brand-soft: #e8f7ee;
-  --brand-light: #4ade80;
-  --avatar-bg: linear-gradient(145deg, #15803d 0%, #22c55e 100%);
-  --amber: #f59e0b;
-  --amber-soft: #fef3c7;
-  --rose: #e11d48;
-  --rose-soft: #ffe4e6;
-  --bg: #eef3ee;
+  /* 低饱和语义色 */
+  --success: #4f8a6d;
+  --success-soft: #eaf2ee;
+  --success-rgb: 79, 138, 109;
+  --danger: #bf5f6e;
+  --danger-soft: #f8eaed;
+  --danger-rgb: 191, 95, 110;
+  --warning: #b58545;
+  --warning-strong: #8a622f;
+  --warning-soft: #f8f0e4;
+  --warning-rgb: 181, 133, 69;
+  --info: #5f7f9a;
+  --info-soft: #eaf0f5;
+  --amber: var(--warning);
+  --amber-soft: var(--warning-soft);
+  --rose: var(--danger);
+  --rose-soft: var(--danger-soft);
+
+  /* 当前页面主题色，默认首页 */
+  --accent: #527f76;
+  --accent-strong: #3f665e;
+  --accent-soft: #e9f1ef;
+  --accent-light: #9bbdb4;
+  --accent-rgb: 82, 127, 118;
+  --bg: #f3f6f5;
   --surface: #ffffff;
-  --surface-soft: #f6faf6;
-  --text: #0f172a;
-  --text-2: #475569;
-  --muted: #94a3b8;
-  --line: #e2ede4;
+  --surface-soft: #f6f9f8;
+  --text: #27312f;
+  --text-2: #5d6a67;
+  --muted: #8d9a97;
+  --line: #e1e8e6;
+  --toast-bg: #3f665e;
+
+  --brand: var(--accent);
+  --brand-dark: var(--accent-strong);
+  --brand-soft: var(--accent-soft);
+  --brand-light: var(--accent-light);
+  --brand-rgb: var(--accent-rgb);
+  --avatar-bg: linear-gradient(145deg, var(--accent-strong), var(--accent));
+
   /* iOS Liquid Glass: 更大的圆角，更柔和的分层阴影 */
   --radius-lg: 28px;
   --radius: 20px;
   --radius-sm: 14px;
-  --shadow: 0 18px 40px -12px rgba(15, 23, 42, 0.14), 0 4px 12px -4px rgba(15, 23, 42, 0.06);
-  --shadow-soft: 0 8px 24px -8px rgba(15, 23, 42, 0.1), 0 2px 6px -2px rgba(15, 23, 42, 0.04);
+  --shadow: 0 18px 40px -12px rgba(39, 49, 47, 0.13), 0 4px 12px -4px rgba(39, 49, 47, 0.05);
+  --shadow-soft: 0 8px 24px -8px rgba(39, 49, 47, 0.09), 0 2px 6px -2px rgba(39, 49, 47, 0.04);
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 
   /* === Liquid Glass 材质 token === */
-  /* 普通材质：半透明白 + 高饱和模糊 + 顶部内高光发丝边 */
-  --glass-bg: rgba(255, 255, 255, 0.66);
-  --glass-bg-strong: rgba(255, 255, 255, 0.82);
-  --glass-bg-clear: rgba(255, 255, 255, 0.32);
-  --glass-border: rgba(255, 255, 255, 0.6);
-  --glass-border-soft: rgba(255, 255, 255, 0.45);
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-bg-strong: rgba(255, 255, 255, 0.86);
+  --glass-bg-clear: rgba(255, 255, 255, 0.36);
+  --glass-border: rgba(255, 255, 255, 0.62);
+  --glass-border-soft: rgba(255, 255, 255, 0.48);
   --glass-highlight: inset 0 1px 0.5px rgba(255, 255, 255, 0.9);
-  --glass-shadow: 0 12px 32px -8px rgba(15, 23, 42, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  --glass-shadow: 0 12px 32px -8px rgba(39, 49, 47, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.7);
   --glass-blur: 22px;
-  --glass-saturate: 180%;
+  --glass-saturate: 160%;
 
   --van-primary-color: var(--brand);
-  --van-success-color: var(--brand);
-  --van-danger-color: var(--rose);
-  --van-warning-color: var(--amber);
+  --van-success-color: var(--success);
+  --van-danger-color: var(--danger);
+  --van-warning-color: var(--warning);
   --van-text-color: var(--text);
   --van-text-color-2: var(--text-2);
   --van-text-color-3: var(--muted);
@@ -50,12 +73,85 @@
   --van-cell-group-inset-padding: 0;
   --van-field-label-color: var(--text-2);
   --van-tabbar-item-active-color: var(--brand);
+  --van-tabbar-item-text-color: var(--muted);
+  --van-tabbar-item-active-background: transparent;
+  --van-tabbar-background: rgba(255, 255, 255, 0.88);
   --van-tabbar-height: 58px;
   --van-dialog-radius: 24px;
   --van-popup-round-radius: 28px;
   --van-button-primary-background: var(--brand);
   --van-button-primary-border-color: var(--brand);
   --van-button-radius: 14px;
+  --van-toast-background: var(--toast-bg);
+  --van-toast-text-color: #ffffff;
+  --van-tab-active-text-color: var(--brand);
+  --van-tab-text-color: var(--muted);
+  --van-tabs-bottom-bar-color: var(--brand);
+}
+
+/* 首页：清透鼠尾草 */
+:root,
+:root[data-theme='home'] {
+  --accent: #527f76;
+  --accent-strong: #3f665e;
+  --accent-soft: #e9f1ef;
+  --accent-light: #9bbdb4;
+  --accent-rgb: 82, 127, 118;
+  --bg: #f3f6f5;
+  --surface-soft: #f6f9f8;
+  --text: #27312f;
+  --text-2: #5d6a67;
+  --muted: #8d9a97;
+  --line: #e1e8e6;
+  --toast-bg: #3f665e;
+}
+
+/* 错题：柔和陶土 */
+:root[data-theme='questions'] {
+  --accent: #a86151;
+  --accent-strong: #884b3d;
+  --accent-soft: #f8ece8;
+  --accent-light: #cf9d90;
+  --accent-rgb: 168, 97, 81;
+  --bg: #f8f4f1;
+  --surface-soft: #fbf6f4;
+  --text: #312927;
+  --text-2: #6d5d58;
+  --muted: #9c8d87;
+  --line: #ece2dd;
+  --toast-bg: #884b3d;
+}
+
+/* 试卷：静谧靛蓝 */
+:root[data-theme='papers'] {
+  --accent: #6d6ba6;
+  --accent-strong: #555487;
+  --accent-soft: #eeedf8;
+  --accent-light: #aaa8d1;
+  --accent-rgb: 109, 107, 166;
+  --bg: #f5f4f9;
+  --surface-soft: #f8f7fb;
+  --text: #2c2b37;
+  --text-2: #615f73;
+  --muted: #9290a3;
+  --line: #e5e3ee;
+  --toast-bg: #555487;
+}
+
+/* 我的：雾霭蓝灰 */
+:root[data-theme='profile'] {
+  --accent: #617488;
+  --accent-strong: #4c5c6b;
+  --accent-soft: #eef1f4;
+  --accent-light: #a6b3c0;
+  --accent-rgb: 97, 116, 136;
+  --bg: #f5f6f8;
+  --surface-soft: #f8f9fa;
+  --text: #29313a;
+  --text-2: #5d6975;
+  --muted: #8f9aa5;
+  --line: #e4e8ec;
+  --toast-bg: #4c5c6b;
 }
 
 /* === Liquid Glass 工具类 === */
@@ -96,7 +192,7 @@ body,
 }
 
 body {
-  background: #e6efe6;
+  background: var(--bg);
   color: var(--text);
   font-family:
     -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
@@ -124,10 +220,10 @@ a {
   min-height: 100vh;
   margin: 0 auto;
   background:
-    radial-gradient(circle at 0% 0%, rgba(22, 163, 74, 0.06), transparent 42%),
-    radial-gradient(circle at 100% 12%, rgba(13, 148, 136, 0.05), transparent 38%),
+    radial-gradient(circle at 0% 0%, rgba(var(--accent-rgb), 0.07), transparent 42%),
+    radial-gradient(circle at 100% 12%, rgba(var(--accent-rgb), 0.04), transparent 38%),
     var(--bg);
-  box-shadow: 0 0 60px rgba(15, 23, 42, 0.1);
+  box-shadow: 0 0 60px rgba(39, 49, 47, 0.08);
 }
 
 .app-main {
@@ -173,6 +269,45 @@ a {
   font-size: 17px;
   font-weight: 700;
   letter-spacing: -0.2px;
+}
+
+.page-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 2px 14px;
+}
+
+.page-heading-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.page-heading-copy h1 {
+  margin: 0;
+  overflow: hidden;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.page-heading-copy p {
+  margin: 3px 0 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 11.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.page-heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
 }
 
 .section-link {
@@ -235,7 +370,7 @@ a {
   border-color: var(--brand);
   background: var(--brand);
   color: #fff;
-  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.24);
+  box-shadow: 0 4px 12px rgba(var(--brand-rgb), 0.2);
 }
 
 .rich-text {
@@ -272,7 +407,7 @@ a {
   height: 108px;
   margin-bottom: 12px;
   border-radius: var(--radius);
-  background: linear-gradient(90deg, #e8f0e9 25%, #f6faf6 37%, #e8f0e9 63%);
+  background: linear-gradient(90deg, var(--surface-soft) 25%, var(--surface) 37%, var(--surface-soft) 63%);
   background-size: 400% 100%;
   animation: skeleton 1.3s ease infinite;
 }
@@ -319,16 +454,6 @@ a {
   height: calc(12px + var(--safe-bottom));
 }
 
-.sticky-actions {
-  position: sticky;
-  bottom: calc(12px + var(--safe-bottom));
-  z-index: 5;
-  display: flex;
-  gap: 10px;
-  padding: 10px 0 0;
-  background: linear-gradient(to top, var(--bg) 68%, rgba(243, 248, 243, 0));
-}
-
 .van-button {
   font-weight: 600;
 }
@@ -340,7 +465,7 @@ a {
 /* 主按钮：纵向高光渐变 + 顶部内高光，质感更接近 iOS 实心胶囊 */
 .van-button--primary {
   background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0) 60%);
-  box-shadow: 0 8px 18px -6px rgba(22, 163, 74, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  box-shadow: 0 8px 18px -6px rgba(var(--brand-rgb), 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.28);
 }
 
 .van-button--primary:active {
@@ -413,7 +538,7 @@ a {
   bottom: 5px;
   border-radius: 16px;
   background: var(--brand-soft);
-  box-shadow: inset 0 0 0 1px rgba(22, 163, 74, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(var(--brand-rgb), 0.12);
   z-index: 0;
 }
 

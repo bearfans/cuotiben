@@ -50,8 +50,6 @@ export interface QuestionPayload {
   difficulty?: number;
   mastery?: number;
   knowledgePoints?: string[];
-  sourceImageIds?: string[];
-  figureImageIds?: string[];
   source?: 'AI' | 'MANUAL';
   sourceJobId?: string;
 }
@@ -89,7 +87,6 @@ export const aiApi = {
   createJob: (payload: { studentId?: string; uploadIds: string[]; subjectHint?: string }) =>
     api.post<AiJob>('/ai/jobs', payload),
   getJob: (id: string) => api.get<AiJob>(`/ai/jobs/${id}`),
-  retry: (id: string) => api.post<AiJob>(`/ai/jobs/${id}/retry`),
   quota: () => api.get<{ used: number; limit: number; remaining: number }>('/ai/quota'),
 };
 
